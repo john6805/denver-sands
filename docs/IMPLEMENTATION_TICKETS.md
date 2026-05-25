@@ -53,10 +53,12 @@ Goal:
 
 Requirements:
 
-- Add migrations for seasons, golfers, season golfers, courses, course holes, weekly events, tee times, RSVPs, matches, match sides, match participants, stroke allocations, weekly results, tournaments, awards, award results, and admin audit events.
-- Use explicit enums for attendance, match result, match format, week status, season status, and match status.
+- Add migrations for seasons, golfers, season golfers, courses, course holes, weekly events, tee times, RSVPs, matches, match sides, match participants, stroke allocations, weekly results, and admin audit events.
+- Use explicit enums for attendance, match result, match format, week status, season status, match status, and common audit actions.
 - Store raw facts and snapshots rather than derived point totals as the only source of truth.
-- Keep `season.ends_on` nullable/editable because the final season end date remains unresolved in `docs/OPEN_QUESTIONS.md`.
+- Keep `season.ends_on` nullable/editable because the final season end date is the only remaining non-blocking open question in `docs/OPEN_QUESTIONS.md`.
+- Include first-version weekly-operation constraints from `docs/DATA_MODEL.md`, especially unique golfer-week results, match participant cardinality validation, course-hole rank uniqueness, duplicate RSVP prevention, and duplicate season golfer prevention.
+- Defer tournament, tournament round, tournament result, award, and award result tables to the end-of-season tickets so this ticket stays focused on the spreadsheet-replacement workflow.
 
 Acceptance criteria:
 
@@ -64,6 +66,7 @@ Acceptance criteria:
 - Schema can represent `Weekly Point Data`, `Schedule`, and the historical `0512 Match Generator`.
 - Formula/output columns from the workbook are not stored as authoritative user input.
 - Constraints prevent duplicate golfer-week result rows and invalid match participant relationships where practical.
+- The only unresolved question referenced by the schema is nullable/editable `season.ends_on`.
 
 Data model impact:
 
@@ -77,11 +80,14 @@ Tests required:
 
 - Migration apply/rollback test or schema validation test.
 - Model relationship tests for season, golfer, weekly event, match, participant, and weekly result records.
+- Constraint tests for course hole ranks, duplicate weekly results, duplicate RSVP rows, duplicate season golfers, and invalid match participants.
 
 Things not to do:
 
 - Do not add course voting, payment tracking, notification tables, live scoring, or external handicap sync.
+- Do not add tournament or award tables in this ticket.
 - Do not materialize leaderboard totals yet unless the chosen stack requires generated views.
+- Do not block schema work on the final season end date.
 
 ### Ticket 03: Seed Workbook Reference Data
 
@@ -138,7 +144,7 @@ Requirements:
 - Add admin views for season details, golfer roster, course list, weekly schedule, and tee times.
 - Allow editing season name/status/end date, golfer active status/current handicap, course name/booking URL/active status, weekly course, week status, and tee times.
 - Keep the season end date optional/editable.
-- Do not allow scheduling a course for play if required hole handicap ratings are missing once stroke allocation is enabled; until then, show missing data clearly.
+- Before stroke allocation is enabled, show missing course hole data clearly without blocking basic schedule verification.
 
 Acceptance criteria:
 
@@ -261,7 +267,7 @@ Requirements:
 - Add a weekly admin view that lists golfer, attendance, match result, handicap snapshot, gross, net, putts, beers, category points, and total points.
 - Show entered net score and fallback/check net score distinctly.
 - Flag missing inputs that prevent a category from scoring.
-- Keep all point values read-only unless using a future audited override.
+- Keep all point values read-only; audited rank-point overrides are documented policy but should be implemented as a future correction/override ticket, not this first breakdown view.
 
 Acceptance criteria:
 
@@ -345,7 +351,7 @@ Acceptance criteria:
 
 - Admin can enter and edit hole handicap ratings.
 - Duplicate or missing handicap ranks are rejected.
-- Course readiness is visible before match generation.
+- Course readiness is visible before match generation and stroke allocation.
 
 Data model impact:
 
@@ -510,6 +516,7 @@ Acceptance criteria:
 - No-show golfers receive no score values and zero scoring categories except eligible attendance/match behavior.
 - Unknown/planned rows do not count as completed zero-point weeks.
 - Saved results update calculated weekly totals.
+- If a rank-point override is implemented here, it must require an audit reason; otherwise leave overrides out of scope.
 
 Data model impact:
 
@@ -531,6 +538,7 @@ Things not to do:
 - Do not add player self-service score entry.
 - Do not implement hole-by-hole scoring.
 - Do not treat paid status or beers as official points.
+- Do not add silent manual point overrides.
 
 ### Ticket 14: Week Locking
 
@@ -721,7 +729,8 @@ Acceptance criteria:
 
 Data model impact:
 
-- May populate awards and award results when finalized; previews should be dynamic.
+- Adds `awards` and `award_results` if they were not created earlier.
+- Previews should be dynamic; finalization may populate award result rows.
 
 UI impact:
 
@@ -759,7 +768,7 @@ Acceptance criteria:
 
 Data model impact:
 
-- Uses tournaments, tournament rounds, and tournament results.
+- Adds and uses `tournaments`, `tournament_rounds`, `tournament_round_results`, and `tournament_results`.
 
 UI impact:
 

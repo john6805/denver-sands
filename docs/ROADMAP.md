@@ -1,29 +1,29 @@
 # Roadmap
 
-## Phase 0: Resolve Policy Questions
+## Phase 0: Confirm Non-Blocking Policy
 
-Goal: remove ambiguity before building logic that will be hard to change.
+Goal: keep implementation from depending on unresolved league policy.
 
 Tasks:
 
-- Keep season end date editable and allow it to remain TBD during setup.
-- Seed Stefan's handicap as 10 and keep all handicaps editable.
-- Backfill historical partners/opponents from the first workbook's `0512 Match Generator`.
+- Treat the final season end date as TBD and editable.
+- Keep confirmed scoring, matchmaking, data cleanup, and tournament decisions in their rule docs.
+- Use `OPEN_QUESTIONS.md` only for unresolved questions.
 
 Deliverable:
 
-- Updated `OPEN_QUESTIONS.md` with answered decisions moved into the relevant rule docs.
+- `OPEN_QUESTIONS.md` contains no blocker for database schema work.
 
-## Phase 1: Foundation
+## Phase 1: Foundation And Seeded Setup
 
-Goal: create the durable domain model.
+Goal: create the durable domain model and enough admin setup to verify imported workbook facts.
 
 Tasks:
 
 - Create database schema for seasons, golfers, courses, schedule, RSVPs, matches, results, and audits.
-- Seed initial scoring configuration.
+- Seed/import the current workbook's first-version facts.
 - Add course and golfer normalization.
-- Add admin-only basics if auth exists.
+- Add basic admin season, roster, course, schedule, and tee-time editing.
 
 Acceptance checks:
 
@@ -31,6 +31,7 @@ Acceptance checks:
 - Can create golfers.
 - Can create courses.
 - Can create weekly events and tee times.
+- Can verify and correct the seeded season before scoring logic is implemented.
 
 ## Phase 2: Scoring Engine
 
@@ -44,7 +45,6 @@ Tasks:
 - Implement gross/net/putt rank points.
 - Implement weekly total points.
 - Implement raw and official season totals.
-- Implement tournament placement points.
 
 Acceptance checks:
 
@@ -60,7 +60,7 @@ Tasks:
 - Build admin result-entry workflow.
 - Support no-show and unknown statuses.
 - Support score/putt entry.
-- Support beer and paid tracking if retained.
+- Support beer tracking as a social stat.
 - Show point breakdowns per golfer.
 - Lock completed weeks.
 
@@ -70,33 +70,19 @@ Acceptance checks:
 - Leaderboard updates from result data.
 - Locked week correction requires audit reason.
 
-## Phase 4: Leaderboards And History
+## Phase 4: Match Generation And Stroke Allocation
 
-Goal: replace `Leaderboard`, `Weekly Points`, and `Stroke & Putt History`.
-
-Tasks:
-
-- Build current leaderboard.
-- Build official leaderboard after dropped weeks.
-- Build golfer score history.
-- Build match wins/no-shows/lowest score stats.
-- Add award/sanction preview stats.
-
-Acceptance checks:
-
-- Leaderboard shows raw points, official points, behind, match wins, no-shows, lowest gross, lowest net, lowest putts, and beer totals where enabled.
-
-## Phase 5: Match Generation
-
-Goal: replace `Match Generator`.
+Goal: replace `Match Generator` before the weekly result workflow depends on it.
 
 Tasks:
 
+- Snapshot weekly handicaps.
+- Capture course hole handicap ratings.
+- Allocate strokes to holes.
 - Build RSVP/attendance list for a week.
+- Implement format planning for 2v2, 1v1, and 1v1v1.
 - Implement random match generation.
-- Support 2v2, 1v1, and 1v1v1.
-- Enforce no third consecutive partnership where possible.
-- Calculate handicap stroke differences.
+- Enforce no third consecutive 2v2 partnership where possible.
 - Store generated matchups.
 - Allow admin reroll and override.
 
@@ -105,40 +91,65 @@ Acceptance checks:
 - 9 confirmed golfers can generate three 1v1v1 groups like the workbook example.
 - 4 confirmed golfers can generate one 2v2 group.
 - Repeated partner constraint is tested.
+- Missing course hole handicap data blocks stroke allocation rather than guessing.
 
-## Phase 6: Course Holes And Stroke Allocation
+## Phase 5: Weekly Results And Leaderboards
 
-Goal: support Word rule requiring strokes on toughest holes.
+Goal: replace `Weekly Point Data`, `Leaderboard`, `Weekly Points`, and `Stroke & Putt History`.
 
 Tasks:
 
-- Add course hole handicap entry.
-- Allocate strokes to holes.
-- Display strokes received/given for each match.
-- Handle missing hole handicap data.
+- Build admin result-entry workflow.
+- Support no-show and unknown statuses.
+- Support score/putt entry.
+- Show point breakdowns per golfer.
+- Lock completed weeks.
+- Build raw leaderboard.
+- Build official leaderboard after dropped weeks.
+- Build public leaderboard.
+- Build golfer score history.
+- Build match wins/no-shows/lowest score stats.
 
 Acceptance checks:
 
-- A player/team receiving 3 strokes gets them on the three toughest holes being played.
+- Admin can complete one week from attendance through public leaderboard without Excel formulas.
+- Leaderboard shows raw points, official points, behind, match wins, no-shows, lowest gross, lowest net, lowest putts, and beer totals where enabled.
+- Locked week correction requires audit reason.
 
-## Phase 7: End-Of-Season
+## Phase 6: Awards, Sanctions, And Tournament
 
-Goal: implement rules not present in workbook.
+Goal: implement end-of-season rules not present in the workbook.
 
 Tasks:
 
-- Apply two-lowest-week drops.
+- Calculate regular-season awards and sanctions.
 - Build tournament setup.
 - Enter two 18-hole tournament rounds.
 - Calculate tournament points.
 - Calculate Tournament Champion and Points Champion.
-- Calculate awards and sanctions.
+- Finalize awards and champions.
 
 Acceptance checks:
 
 - Final standings use official points.
 - Tournament placement points match the Word document.
 - Awards/sanctions are explainable from source data.
+
+## Phase 7: Audit, Regression, And Release Readiness
+
+Goal: prove the first version can replace the spreadsheet for a weekly cycle.
+
+Tasks:
+
+- Build audit trail browser.
+- Add first-version regression harness.
+- Run admin-to-public vertical slice QA.
+- Document follow-up gaps as future tickets.
+
+Acceptance checks:
+
+- Regression suite protects confirmed scoring, matchmaking, leaderboard, drop-week, awards, and tournament behavior.
+- No first-version blocker remains for spreadsheet replacement.
 
 ## Phase 8: Polish And Optional Enhancements
 

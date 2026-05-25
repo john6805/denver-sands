@@ -25,6 +25,12 @@ For each scheduled week:
 - Pairing history from prior completed/generated weeks.
 - Course hole handicap ratings.
 
+Confirmed setup decisions:
+
+- Track partners/opponents historically.
+- Backfill first-week partners/opponents from `0512 Match Generator`.
+- Weekly handicaps are manually entered or updated from 18Birdies.
+
 ## Attendance Statuses
 
 Workbook statuses:
@@ -40,7 +46,7 @@ Recommended app statuses:
 - `CONFIRMED`: golfer plans to play.
 - `PLAYED`: golfer attended and has score data.
 - `NO_SHOW`: golfer did not play.
-- `WITHDRAWN`: optional future status for known absence before match generation.
+- `WITHDRAWN`: known absence before match generation.
 
 For generation, include `CONFIRMED` and possibly admin-selected golfers only.
 
@@ -125,6 +131,8 @@ For first-version scoring, do not combine partner handicaps into a team handicap
 
 The app should store each golfer's weekly handicap snapshot and optionally display each golfer's half-handicap for reference, but official 2v2 match result points come from the admin-entered final result.
 
+Stefan's starting handicap should be seeded as 10 for the current workbook import, but all handicaps remain editable.
+
 ### 1v1
 
 Workbook formula:
@@ -185,6 +193,7 @@ Implementation rule:
 - The first version does not calculate best-ball results from hole-by-hole scores.
 - Admin enters the final match play standing/result for the group.
 - The app stores the match result and awards match points from that final admin-entered result.
+- The first version does not need hole-by-hole scoring.
 
 ## Admin Override
 

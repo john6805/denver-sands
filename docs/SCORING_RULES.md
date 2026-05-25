@@ -14,6 +14,12 @@ For each golfer-week, the app needs:
 - Beer count, if keeping the workbook's social scoring metric.
 - Match format and team/group membership.
 
+Confirmed setup decisions:
+
+- Weekly play is nine holes.
+- 2026-05-12 was the first week of play for the current workbook import.
+- The final season end date is TBD and should remain editable; it does not block scoring implementation.
+
 ## Attendance Points
 
 Workbook rule:
@@ -38,6 +44,8 @@ Normalize workbook `unk` to `UNKNOWN`.
 Decision:
 
 - Show-up points are official league scoring and should be included in weekly totals.
+- Planned/unplayed `UNKNOWN` weeks are excluded from completed-week, leaderboard, and drop-week calculations.
+- Canceled/weather weeks are excluded from drop-week calculations.
 
 ## Match Points
 
@@ -205,6 +213,11 @@ weekly_points =
 
 Beer count is not part of official weekly points. It is only a fun/social metric and should never affect official standings, awards, sanctions, or champions.
 
+Audited overrides:
+
+- Admins may override calculated rank points only through an audited correction flow with a required reason.
+- Overrides should not be part of the first scoring service unless the implementing ticket explicitly includes audit behavior.
+
 ## Season Points
 
 Current workbook behavior:
@@ -225,6 +238,7 @@ Implementation rule:
 - For final standings, drop each golfer's two lowest weekly point totals.
 - Planned/unplayed weeks with `UNKNOWN` status should not count as low weeks.
 - No-show completed weeks with 0 points should count as eligible low weeks.
+- Canceled/weather weeks should not count as low weeks.
 
 Purpose:
 
@@ -272,6 +286,7 @@ Implementation rule:
 
 - Treat beers as a tracked social stat.
 - Do not include beers in official points.
+- There was no money buy-in for the first league iteration, so payout/payment features are out of scope for first-version scoring.
 
 ## Award And Sanction Metrics
 

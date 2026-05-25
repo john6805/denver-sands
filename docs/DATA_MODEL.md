@@ -9,6 +9,7 @@ This document proposes a normalized relational data model for the league app.
 - Preserve historical context when handicaps, courses, or rules change.
 - Avoid spreadsheet placeholders such as `-`, `n/a`, and blank numeric cells.
 - Keep admin overrides auditable.
+- Treat the final season end date as non-blocking by keeping `seasons.ends_on` nullable/editable.
 
 ## Tables
 
@@ -44,7 +45,7 @@ This document proposes a normalized relational data model for the league app.
 | season_id | uuid | FK seasons |
 | golfer_id | uuid | FK golfers |
 | starting_handicap | decimal | Optional |
-| current_handicap | decimal | Manually updated from 18Birdies |
+| current_handicap | decimal | Manually updated from 18Birdies; seed Stefan as 10 for the current workbook import |
 | paid_status | enum | Optional future field; first version can omit |
 | joined_on | date | Optional |
 | left_on | date | Optional |
@@ -188,6 +189,7 @@ One row per golfer per week.
 | beers | integer | Default 0 |
 | paid_status | enum | Optional future field; first version can omit |
 | locked_at | datetime | Nullable |
+| override_reason | text | Optional; required if an audited scoring override is later stored on the row |
 
 ### weekly_point_breakdowns
 
@@ -228,16 +230,30 @@ This can be a materialized/cache table or computed view. Prefer dynamic calculat
 | play_date | date | Date |
 | holes | integer | 18 |
 
+### tournament_round_results
+
+One row per golfer per tournament round.
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| id | uuid | Primary key |
+| tournament_round_id | uuid | FK tournament_rounds |
+| golfer_id | uuid | FK golfers |
+| handicap_snapshot | decimal | Full tournament handicap used for that round, if tracked |
+| net_score | integer | Nullable until entered |
+| putts | integer | Nullable until entered |
+
 ### tournament_results
+
+One row per golfer per tournament, calculated from `tournament_round_results` and optionally locked/finalized.
 
 | Field | Type | Notes |
 | --- | --- | --- |
 | id | uuid | Primary key |
 | tournament_id | uuid | FK tournaments |
 | golfer_id | uuid | FK golfers |
-| round_1_score | integer | Nullable |
-| round_2_score | integer | Nullable |
-| total_score | integer | Calculated or stored snapshot |
+| total_net_score | integer | Calculated or stored finalized snapshot |
+| total_putts | integer | Calculated or stored finalized snapshot |
 | place | integer | Calculated/locked |
 | tournament_points | integer | From placement table |
 
@@ -284,8 +300,15 @@ Attendance:
 - unknown
 - confirmed
 - declined
+- withdrawn
 - no_show
 - played
+
+Season status:
+
+- draft
+- active
+- finalized
 
 Match result:
 
@@ -308,6 +331,60 @@ Week status:
 - completed
 - locked
 - canceled
+
+Match status:
+
+- draft
+- published
+- completed
+
+Tournament status:
+
+- planned
+- completed
+- locked
+
+Audit action:
+
+- created
+- updated
+- generated
+- rerolled
+- published
+- override
+- locked
+- corrected
+
+## First-Version Schema Constraints
+
+Ticket 02 should include these weekly-operation constraints where the chosen database supports them:
+
+- `seasons.year` unique enough to avoid duplicate current seasons, or a unique season slug/name if multiple seasons per year are ever allowed.
+- `golfers.display_name` unique within active roster context where practical.
+- `season_golfers` unique on `(season_id, golfer_id)`.
+- `courses.name` unique after normalization.
+- `course_holes` unique on `(course_id, hole_number)` and `(course_id, handicap_rank)`, with hole numbers and handicap ranks constrained to 1-18.
+- `weekly_events` unique on `(season_id, week_code)` and preferably `(season_id, play_date)`.
+- `weekly_tee_times` unique on `(weekly_event_id, starts_at)` or `(weekly_event_id, sort_order)`.
+- `weekly_rsvps` unique on `(weekly_event_id, golfer_id)`.
+- `weekly_matches` belong to one `weekly_event`.
+- `weekly_match_sides` unique on `(match_id, side_number)`.
+- `weekly_match_participants` unique on `(match_side_id, golfer_id)` and also prevent the same golfer from appearing twice in one match.
+- Match participant cardinality should be enforced in service validation if the database cannot express it: 2v2 has two sides with two participants each; 1v1 has two sides with one participant each; 1v1v1 has three sides with one participant each.
+- `weekly_results` unique on `(weekly_event_id, golfer_id)`.
+- Formula-derived point totals should not be the only authoritative stored source; use raw facts plus dynamic calculations unless a locked/finalized snapshot is explicitly needed for audit.
+
+End-of-season tickets should add these constraints when those tables are introduced:
+
+- `tournament_rounds` unique on `(tournament_id, round_number)` with round numbers 1 and 2 for the first version.
+- `tournament_round_results` unique on `(tournament_round_id, golfer_id)`.
+- `tournament_results` unique on `(tournament_id, golfer_id)`.
+- `award_results` unique on `(award_id, golfer_id)`.
+
+## Implementation Sequencing
+
+- Ticket 02 should create the weekly-operation schema needed for seasons, roster, courses, schedule, RSVPs, match generation, weekly results, and audits.
+- Tournament and award tables are part of the first-version data model, but they can be introduced by the end-of-season tickets because early spreadsheet replacement does not depend on them.
 
 ## Dynamic Calculations
 
@@ -348,6 +425,15 @@ Use stored snapshots for:
 - Gross Score -> `weekly_results.gross_score`
 - Net Score -> `weekly_results.net_score`
 - Putts -> `weekly_results.putts`
+
+Current import cleanup:
+
+- Seed the 2026 season with W01 play date `2026-05-12`.
+- Exclude `Cal` from the active roster.
+- Seed Stefan's handicap as `10` and keep it editable.
+- Normalize `Walnut Creet` to `Walnut Creek`.
+- Normalize `IndianTree` and `Indian Tree` to `Indian Tree`.
+- Do not import hidden example/prototype sheets as active data.
 
 Formula/output columns should be recalculated, not imported as authoritative:
 
