@@ -1,6 +1,5 @@
-import { PlaceholderPage } from "@/components/placeholder-page";
-import { getPlaceholderPage } from "@/lib/page-content";
+import { AdminSeasonSetup } from "@/components/admin-season-setup";
 
 export default function AdminDashboardPage() {
-  return <PlaceholderPage page={getPlaceholderPage("/admin")} />;
+  return <AdminSeasonSetup />;
 }
