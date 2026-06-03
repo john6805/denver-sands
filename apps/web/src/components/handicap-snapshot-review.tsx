@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { AlertCircle, CheckCircle2, Loader2, Save } from "lucide-react";
 
 import {
@@ -13,8 +13,9 @@ import {
   createHandicapSnapshots,
   getSnapshotData,
   updateSeasonGolferHandicap,
-} from "@/app/actions/league-data";
+} from "@/app/actions/handicap-snapshots";
 import { Button } from "@/components/ui/button";
+import { useActionData } from "@/lib/use-action-data";
 import type {
   SaveResponse,
   SeasonGolfer,
@@ -31,30 +32,8 @@ function selectClassName() {
   return "h-9 min-w-52 rounded-md border bg-background px-2 text-sm shadow-xs";
 }
 
-function useSnapshotData() {
-  const [data, setData] = useState<SnapshotData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    const response = await getSnapshotData();
-    setData(response.data);
-    setError(response.error);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    void Promise.resolve().then(load);
-  }, [load]);
-
-  return { data, loading, error, reload: load };
-}
-
 export function HandicapSnapshotReview() {
-  const { data, loading, error, reload } = useSnapshotData();
+  const { data, loading, error, reload } = useActionData<SnapshotData>(getSnapshotData);
   const [selectedWeekId, setSelectedWeekId] = useState("");
   const [saving, setSaving] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);

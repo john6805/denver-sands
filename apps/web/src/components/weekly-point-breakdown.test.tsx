@@ -1,12 +1,16 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/app/actions/league-data", () => ({
+vi.mock("@/app/actions/weekly-results", () => ({
+  correctWeeklyResults: vi.fn(),
   getBreakdownData: vi.fn(),
+  lockWeeklyEvent: vi.fn(),
+  saveWeeklyResults: vi.fn(),
 }));
 
 import {
   BreakdownTable,
+  WeeklyResultEntryTable,
   WeekStatusSummary,
 } from "@/components/weekly-point-breakdown";
 import {
@@ -133,5 +137,75 @@ describe("weekly point breakdown rendering", () => {
     expect(html).toContain("Fallback Net");
     expect(html).toContain("fallback");
     expect(html).toContain(">45<");
+  });
+
+  it("renders weekly result entry controls for roster golfers", () => {
+    const html = renderToStaticMarkup(
+      <WeeklyResultEntryTable
+        week={{
+          id: "week-1",
+          week_code: "W01",
+          play_date: "2026-05-12",
+          status: "open",
+        }}
+        roster={[
+          {
+            golfer: {
+              id: "zach",
+              display_name: "Zach",
+              active: true,
+            },
+            seasonGolfer: {
+              id: "season-zach",
+              season_id: "season-1",
+              golfer_id: "zach",
+              current_handicap: 21,
+            },
+          },
+        ]}
+        weeklyResults={[]}
+      />,
+    );
+
+    expect(html).toContain("Result Entry");
+    expect(html).toContain("Save results");
+    expect(html).toContain("Zach");
+    expect(html).toContain("played");
+    expect(html).toContain("not_applicable");
+    expect(html).toContain("value=\"21\"");
+  });
+
+  it("renders locked-week correction controls instead of normal save copy", () => {
+    const html = renderToStaticMarkup(
+      <WeeklyResultEntryTable
+        week={{
+          id: "week-1",
+          week_code: "W01",
+          play_date: "2026-05-12",
+          status: "locked",
+        }}
+        roster={[
+          {
+            golfer: {
+              id: "zach",
+              display_name: "Zach",
+              active: true,
+            },
+            seasonGolfer: {
+              id: "season-zach",
+              season_id: "season-1",
+              golfer_id: "zach",
+              current_handicap: 21,
+            },
+          },
+        ]}
+        weeklyResults={[]}
+      />,
+    );
+
+    expect(html).toContain("Locked week correction");
+    expect(html).toContain("Correction reason");
+    expect(html).toContain("Save correction");
+    expect(html).not.toContain("Save results");
   });
 });

@@ -1,6 +1,5 @@
-import { PlaceholderPage } from "@/components/placeholder-page";
-import { getPlaceholderPage } from "@/lib/page-content";
+import { RawLeaderboardView } from "@/components/raw-leaderboard";
 
 export default function LeaderboardPage() {
-  return <PlaceholderPage page={getPlaceholderPage("/leaderboard")} />;
+  return <RawLeaderboardView />;
 }

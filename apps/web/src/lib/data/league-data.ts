@@ -93,6 +93,8 @@ export type WeeklyResult = {
   gross_score: number | null;
   net_score: number | null;
   putts: number | null;
+  locked_at: string | null;
+  override_reason: string | null;
 };
 
 export type AdminData = {
@@ -117,6 +119,9 @@ export type SnapshotData = {
 export type BreakdownData = {
   season: SeasonSummary;
   weeklyEvents: WeeklyEventSummary[];
-  golfers: GolferSummary[];
+  golfers: Golfer[];
+  seasonGolfers: SeasonGolfer[];
   weeklyResults: WeeklyResult[];
 };
+
+export type LeaderboardData = BreakdownData;

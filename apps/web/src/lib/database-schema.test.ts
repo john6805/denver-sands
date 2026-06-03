@@ -88,6 +88,8 @@ describe("core database schema migration", () => {
     expect(weeklyResults).toContain("gross_score integer");
     expect(weeklyResults).toContain("net_score integer");
     expect(weeklyResults).toContain("putts integer");
+    expect(weeklyResults).toContain("locked_at timestamptz");
+    expect(weeklyResults).toContain("override_reason text");
 
     expect(weeklyResults).not.toMatch(/attendance_points|match_points/);
     expect(weeklyResults).not.toMatch(/gross_points|net_points|putt_points/);
@@ -137,6 +139,18 @@ describe("core database schema migration", () => {
     expect(handicapSnapshots).toContain("half_handicap integer");
     expect(handicapSnapshots).toContain(
       "constraint golfer_handicap_snapshots_unique unique",
+    );
+  });
+
+  it("supports audited locked-week corrections", () => {
+    const auditEvents = tableDefinition("admin_audit_events");
+
+    expect(auditEvents).toContain("action audit_action");
+    expect(auditEvents).toContain("before_json jsonb");
+    expect(auditEvents).toContain("after_json jsonb");
+    expect(auditEvents).toContain("reason text");
+    expect(auditEvents).toContain(
+      "action not in ('override', 'corrected') or nullif(btrim(reason), '') is not null",
     );
   });
 });

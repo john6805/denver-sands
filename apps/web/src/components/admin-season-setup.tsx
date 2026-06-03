@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import {
   AlertCircle,
   CalendarDays,
@@ -42,8 +42,9 @@ import {
   updateSeason,
   updateTeeTime,
   updateWeeklyEvent,
-} from "@/app/actions/league-data";
+} from "@/app/actions/admin-season";
 import { Button } from "@/components/ui/button";
+import { useActionData } from "@/lib/use-action-data";
 import type {
   AdminData,
   Course,
@@ -66,30 +67,8 @@ function formatTime(value: string) {
   return value.slice(0, 5);
 }
 
-function useAdminData() {
-  const [data, setData] = useState<AdminData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    const response = await getAdminData();
-    setData(response.data);
-    setError(response.error);
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    void Promise.resolve().then(load);
-  }, [load]);
-
-  return { data, loading, error, reload: load };
-}
-
 export function AdminSeasonSetup() {
-  const { data, loading, error, reload } = useAdminData();
+  const { data, loading, error, reload } = useActionData<AdminData>(getAdminData);
   const [saving, setSaving] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 

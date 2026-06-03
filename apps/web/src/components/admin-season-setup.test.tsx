@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/app/actions/league-data", () => ({
+vi.mock("@/app/actions/admin-season", () => ({
   createCourse: vi.fn(),
   createRosterGolfer: vi.fn(),
   createSeason: vi.fn(),
