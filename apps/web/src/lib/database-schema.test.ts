@@ -88,7 +88,6 @@ describe("core database schema migration", () => {
     expect(weeklyResults).toContain("gross_score integer");
     expect(weeklyResults).toContain("net_score integer");
     expect(weeklyResults).toContain("putts integer");
-    expect(weeklyResults).toContain("beers integer");
 
     expect(weeklyResults).not.toMatch(/attendance_points|match_points/);
     expect(weeklyResults).not.toMatch(/gross_points|net_points|putt_points/);
@@ -128,6 +127,16 @@ describe("core database schema migration", () => {
     );
     expect(migrationSql).toContain(
       "constraint stroke_allocations_distinct_sides_check",
+    );
+  });
+
+  it("stores full and half handicap snapshots for weekly generation", () => {
+    const handicapSnapshots = tableDefinition("golfer_handicap_snapshots");
+
+    expect(handicapSnapshots).toContain("handicap numeric");
+    expect(handicapSnapshots).toContain("half_handicap integer");
+    expect(handicapSnapshots).toContain(
+      "constraint golfer_handicap_snapshots_unique unique",
     );
   });
 });

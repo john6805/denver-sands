@@ -1,6 +1,5 @@
-import { PlaceholderPage } from "@/components/placeholder-page";
-import { getPlaceholderPage } from "@/lib/page-content";
+import { WeeklyPointBreakdownView } from "@/components/weekly-point-breakdown";
 
 export default function WeeklyResultsPage() {
-  return <PlaceholderPage page={getPlaceholderPage("/weekly-results")} />;
+  return <WeeklyPointBreakdownView />;
 }

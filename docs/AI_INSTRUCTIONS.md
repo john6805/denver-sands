@@ -73,7 +73,7 @@ Tournament:
 ## Known Conflicts To Respect
 
 - Workbook currently sums all weeks; Word requires dropping two lowest weeks at season end.
-- Workbook tracks show-up points and beers; show-up points are official, beer points are for fun only.
+- Workbook tracks show-up points; show-up points are official.
 - Word says weekly scoring has three areas; workbook splits individual stroke play into gross and net points.
 - Word says May through August; workbook schedule includes September, but the league end date is TBD and likely in August.
 - Workbook leaderboard tracks lowest gross; Word's Going Low award uses lowest net.

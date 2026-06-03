@@ -11,7 +11,6 @@ For each golfer-week, the app needs:
 - Handicap used for that week.
 - Gross score.
 - Putts.
-- Beer count, if keeping the workbook's social scoring metric.
 - Match format and team/group membership.
 
 Confirmed setup decisions:
@@ -211,8 +210,6 @@ weekly_points =
   + putt_rank_points
 ```
 
-Beer count is not part of official weekly points. It is only a fun/social metric and should never affect official standings, awards, sanctions, or champions.
-
 Audited overrides:
 
 - Admins may override calculated rank points only through an audited correction flow with a required reason.
@@ -273,20 +270,6 @@ Tournament tie-breakers:
 2. Lower final-round net score.
 3. Lower final-round putts.
 4. If still tied, share the place and each tied golfer receives the points for that place.
-
-## Beer Points
-
-Workbook behavior:
-
-```text
-points_plus_beer_points = season_points + sum(beers)
-```
-
-Implementation rule:
-
-- Treat beers as a tracked social stat.
-- Do not include beers in official points.
-- There was no money buy-in for the first league iteration, so payout/payment features are out of scope for first-version scoring.
 
 ## Award And Sanction Metrics
 

@@ -7,6 +7,24 @@ const seedPath = path.resolve(__dirname, "../../../../supabase/seed.sql");
 const seedSql = readFileSync(seedPath, "utf8");
 
 describe("workbook seed data", () => {
+  it("uses conflict handling for rerunnable phase 1 seed tables", () => {
+    const expectedConflictTargets = [
+      "on conflict (year) do update",
+      "on conflict (name) do update",
+      "on conflict (display_name) do update",
+      "on conflict (season_id, golfer_id) do update",
+      "on conflict (season_id, week_code) do update",
+      "on conflict (weekly_event_id, starts_at) do update",
+      "on conflict (weekly_event_id, golfer_id) do update",
+      "on conflict (match_id, side_number) do update",
+      "on conflict (match_id, golfer_id) do update",
+    ];
+
+    for (const expectedConflictTarget of expectedConflictTargets) {
+      expect(seedSql).toContain(expectedConflictTarget);
+    }
+  });
+
   it("seeds the active 2026 season with a nullable end date", () => {
     expect(seedSql).toContain("'2026 Denver Sands'");
     expect(seedSql).toContain("2026,");
@@ -59,13 +77,13 @@ describe("workbook seed data", () => {
 
   it("maps weekly point data raw facts without authoritative point columns", () => {
     expect(seedSql).toContain(
-      "('Zach', 'confirmed'::attendance_status, 'won'::match_result, 21.0::numeric, 40, 29, 13, 0)",
+      "('Zach', 'confirmed'::attendance_status, 'won'::match_result, 21.0::numeric, 40, 29, 13)",
     );
     expect(seedSql).toContain(
-      "('John', 'confirmed'::attendance_status, 'tied'::match_result, 28.0::numeric, 60, 46, 18, 4)",
+      "('John', 'confirmed'::attendance_status, 'tied'::match_result, 28.0::numeric, 60, 46, 18)",
     );
     expect(seedSql).toContain(
-      "('Jared', 'no_show'::attendance_status, 'not_applicable'::match_result, null::numeric, null::integer, null::integer, null::integer, 0)",
+      "('Jared', 'no_show'::attendance_status, 'not_applicable'::match_result, null::numeric, null::integer, null::integer, null::integer)",
     );
 
     expect(seedSql).not.toMatch(/showing_up_points|gross_points|total_points/i);

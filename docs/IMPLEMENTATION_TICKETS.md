@@ -125,7 +125,7 @@ UI impact:
 Tests required:
 
 - Seed idempotency test.
-- Workbook mapping tests for attendance status, match result, handicap, gross score, net score, putts, beers, course names, and active roster.
+- Workbook mapping tests for attendance status, match result, handicap, gross score, net score, putts, course names, and active roster.
 - Regression test that hidden example sheets are ignored.
 
 Things not to do:
@@ -171,6 +171,48 @@ Things not to do:
 - Do not build public leaderboard, charts, award pages, notifications, or course voting.
 - Do not implement scoring calculations in these screens.
 
+### Ticket 04A: Phase 1 Gap Closure
+
+Goal:
+
+- Close the remaining Phase 1 acceptance gaps before starting scoring work.
+
+Requirements:
+
+- Add admin create flows for seasons, golfers, courses, weekly events, and tee times.
+- Keep create forms aligned with the existing seeded-data edit screens and validation rules.
+- Allow season creation even when the database has no seeded season yet.
+- Add deterministic validation tests for create payload builders.
+- Add static verification that the seed uses idempotent conflict handling for Phase 1 tables.
+- Document any live database verification that still requires a configured Supabase instance.
+
+Acceptance criteria:
+
+- Admin can create a season from an empty configured database.
+- Admin can add golfers to the active season roster with an editable current handicap.
+- Admin can add courses with optional booking URLs.
+- Admin can add weekly events with optional courses and planned status.
+- Admin can add, edit, and delete tee times for weekly events.
+- Local tests cover create-form validation and seed idempotency expectations.
+
+Data model impact:
+
+- Uses existing Phase 1 tables.
+
+UI impact:
+
+- Adds compact create forms to the Phase 1 admin setup page.
+
+Tests required:
+
+- Create validation tests for seasons, golfers, courses, weekly events, and tee times.
+- Seed idempotency SQL checks for Phase 1 inserts.
+
+Things not to do:
+
+- Do not add scoring, match generation, leaderboard, tournament, award, or audit browser logic.
+- Do not require live Supabase credentials for the local unit test suite.
+
 ## Phase 2: Scoring Correctness
 
 ### Ticket 05: Scoring Engine Core Points
@@ -192,7 +234,6 @@ Acceptance criteria:
 
 - Unit tests pass for all examples in `docs/SCORING_RULES.md`.
 - Missing handicap, gross, net, or putts does not produce bogus zero scores.
-- Beer counts never affect official weekly points.
 - Derived values can be explained from raw weekly result inputs.
 
 Data model impact:
@@ -212,8 +253,6 @@ Tests required:
 Things not to do:
 
 - Do not implement rank points, leaderboard, awards, or tournament scoring here.
-- Do not make beers part of official scoring.
-
 ### Ticket 06: Weekly Rank Points Engine
 
 Goal:
@@ -264,7 +303,7 @@ Goal:
 
 Requirements:
 
-- Add a weekly admin view that lists golfer, attendance, match result, handicap snapshot, gross, net, putts, beers, category points, and total points.
+- Add a weekly admin view that lists golfer, attendance, match result, handicap snapshot, gross, net, putts, category points, and total points.
 - Show entered net score and fallback/check net score distinctly.
 - Flag missing inputs that prevent a category from scoring.
 - Keep all point values read-only; audited rank-point overrides are documented policy but should be implemented as a future correction/override ticket, not this first breakdown view.
@@ -273,7 +312,6 @@ Acceptance criteria:
 
 - Admin can open a seeded or manually entered week and see a complete point breakdown.
 - Total points match the scoring and rank engines.
-- Beer count appears as a social stat only and does not change official total.
 - Planned/unplayed weeks do not look like completed zero-point weeks.
 
 Data model impact:
@@ -504,7 +542,7 @@ Goal:
 
 Requirements:
 
-- Add admin form for each week and golfer to enter attendance, match result, gross score, net score from 18Birdies, putts, beers, and handicap snapshot if missing.
+- Add admin form for each week and golfer to enter attendance, match result, gross score, net score from 18Birdies, putts, and handicap snapshot if missing.
 - Support no-show, unknown/planned, and played states clearly.
 - Validate numeric score fields only when a golfer played.
 - Use generated match sides when available but allow result entry without generated matchups for imported history.
@@ -537,7 +575,7 @@ Things not to do:
 
 - Do not add player self-service score entry.
 - Do not implement hole-by-hole scoring.
-- Do not treat paid status or beers as official points.
+- Do not treat paid status as official points.
 - Do not add silent manual point overrides.
 
 ### Ticket 14: Week Locking

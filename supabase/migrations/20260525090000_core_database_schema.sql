@@ -144,6 +144,7 @@ create table golfer_handicap_snapshots (
   golfer_id uuid not null references golfers(id) on delete restrict,
   effective_week_id uuid not null references weekly_events(id) on delete cascade,
   handicap numeric(4, 1) not null,
+  half_handicap integer not null,
   source handicap_snapshot_source not null default 'admin',
   created_at timestamptz not null default now(),
   constraint golfer_handicap_snapshots_unique unique (
@@ -151,7 +152,10 @@ create table golfer_handicap_snapshots (
     golfer_id,
     effective_week_id
   ),
-  constraint golfer_handicap_snapshots_handicap_check check (handicap >= 0)
+  constraint golfer_handicap_snapshots_handicap_check check (handicap >= 0),
+  constraint golfer_handicap_snapshots_half_handicap_check check (
+    half_handicap >= 0
+  )
 );
 
 create table weekly_tee_times (
@@ -268,7 +272,6 @@ create table weekly_results (
   gross_score integer,
   net_score integer,
   putts integer,
-  beers integer not null default 0,
   locked_at timestamptz,
   override_reason text,
   created_at timestamptz not null default now(),
@@ -282,7 +285,6 @@ create table weekly_results (
   ),
   constraint weekly_results_net_score_check check (net_score is null or net_score > 0),
   constraint weekly_results_putts_check check (putts is null or putts >= 0),
-  constraint weekly_results_beers_check check (beers >= 0),
   constraint weekly_results_no_show_scores_check check (
     attendance_status <> 'no_show'
     or (

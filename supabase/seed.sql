@@ -357,19 +357,19 @@ and weekly_event_id = (
   and weekly_events.week_code = 'W01'
 );
 
-with w01_results(display_name, attendance_status, match_result, handicap_snapshot, gross_score, net_score, putts, beers) as (
+with w01_results(display_name, attendance_status, match_result, handicap_snapshot, gross_score, net_score, putts) as (
   values
-    ('Zach', 'confirmed'::attendance_status, 'won'::match_result, 21.0::numeric, 40, 29, 13, 0),
-    ('John', 'confirmed'::attendance_status, 'tied'::match_result, 28.0::numeric, 60, 46, 18, 4),
-    ('Joe', 'confirmed'::attendance_status, 'tied'::match_result, 17.9::numeric, 42, 33, 17, 0),
-    ('Bird', 'confirmed'::attendance_status, 'won'::match_result, 16.8::numeric, 42, 33, 21, 0),
-    ('Bryan', 'confirmed'::attendance_status, 'tied'::match_result, 13.9::numeric, 42, 35, 18, 0),
-    ('GT', 'confirmed'::attendance_status, 'lost'::match_result, 12.7::numeric, 44, 37, 15, 0),
-    ('Joey', 'confirmed'::attendance_status, 'lost'::match_result, 10.9::numeric, 44, 38, 18, 0),
-    ('Hunter', 'confirmed'::attendance_status, 'lost'::match_result, 28.0::numeric, 55, 41, 18, 0),
-    ('Brandt', 'confirmed'::attendance_status, 'lost'::match_result, 9.1::numeric, 51, 46, 16, 0),
-    ('Jared', 'no_show'::attendance_status, 'not_applicable'::match_result, null::numeric, null::integer, null::integer, null::integer, 0),
-    ('Stefan', 'no_show'::attendance_status, 'not_applicable'::match_result, null::numeric, null::integer, null::integer, null::integer, 0)
+    ('Zach', 'confirmed'::attendance_status, 'won'::match_result, 21.0::numeric, 40, 29, 13),
+    ('John', 'confirmed'::attendance_status, 'tied'::match_result, 28.0::numeric, 60, 46, 18),
+    ('Joe', 'confirmed'::attendance_status, 'tied'::match_result, 17.9::numeric, 42, 33, 17),
+    ('Bird', 'confirmed'::attendance_status, 'won'::match_result, 16.8::numeric, 42, 33, 21),
+    ('Bryan', 'confirmed'::attendance_status, 'tied'::match_result, 13.9::numeric, 42, 35, 18),
+    ('GT', 'confirmed'::attendance_status, 'lost'::match_result, 12.7::numeric, 44, 37, 15),
+    ('Joey', 'confirmed'::attendance_status, 'lost'::match_result, 10.9::numeric, 44, 38, 18),
+    ('Hunter', 'confirmed'::attendance_status, 'lost'::match_result, 28.0::numeric, 55, 41, 18),
+    ('Brandt', 'confirmed'::attendance_status, 'lost'::match_result, 9.1::numeric, 51, 46, 16),
+    ('Jared', 'no_show'::attendance_status, 'not_applicable'::match_result, null::numeric, null::integer, null::integer, null::integer),
+    ('Stefan', 'no_show'::attendance_status, 'not_applicable'::match_result, null::numeric, null::integer, null::integer, null::integer)
 ),
 w01 as (
   select id from weekly_events
@@ -385,8 +385,7 @@ insert into weekly_results (
   handicap_snapshot,
   gross_score,
   net_score,
-  putts,
-  beers
+  putts
 )
 select
   w01.id,
@@ -397,8 +396,7 @@ select
   w01_results.handicap_snapshot,
   w01_results.gross_score,
   w01_results.net_score,
-  w01_results.putts,
-  w01_results.beers
+  w01_results.putts
 from w01_results
 cross join w01
 join golfers on golfers.display_name = w01_results.display_name
@@ -418,7 +416,6 @@ set
   gross_score = excluded.gross_score,
   net_score = excluded.net_score,
   putts = excluded.putts,
-  beers = excluded.beers,
   updated_at = now();
 
 with w02_results(display_name) as (
@@ -444,15 +441,13 @@ insert into weekly_results (
   weekly_event_id,
   golfer_id,
   attendance_status,
-  match_result,
-  beers
+  match_result
 )
 select
   w02.id,
   golfers.id,
   'unknown',
-  'not_applicable',
-  0
+  'not_applicable'
 from w02_results
 cross join w02
 join golfers on golfers.display_name = w02_results.display_name
@@ -464,7 +459,6 @@ set
   gross_score = null,
   net_score = null,
   putts = null,
-  beers = excluded.beers,
   updated_at = now();
 
 commit;

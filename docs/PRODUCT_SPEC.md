@@ -88,7 +88,6 @@ The app should preserve the league's current scoring and matchup behavior while 
    - Gross score.
    - Net score from 18Birdies.
    - Putts.
-   - Optional beers.
 9. App calculates:
    - Net score fallback/validation if needed.
    - Attendance points.
@@ -153,7 +152,6 @@ The app should support:
 - Lowest gross score.
 - Lowest net score.
 - Lowest putts in one week.
-- Beer count and points plus beer points as optional/social metrics.
 
 Current workbook caveat:
 
@@ -236,7 +234,6 @@ The app should calculate:
 - Match win count.
 - No-show count.
 - Lowest/highest gross/net/putt stats.
-- Beer totals.
 - Tournament points.
 - Award/sanction winners.
 

@@ -186,7 +186,6 @@ One row per golfer per week.
 | gross_score | integer | Nullable |
 | net_score | integer | Nullable; entered from 18Birdies |
 | putts | integer | Nullable |
-| beers | integer | Default 0 |
 | paid_status | enum | Optional future field; first version can omit |
 | locked_at | datetime | Nullable |
 | override_reason | text | Optional; required if an audited scoring override is later stored on the row |
@@ -417,7 +416,6 @@ Use stored snapshots for:
 - Course -> `courses.name`
 - Golfer -> `golfers.display_name`
 - Showed -> `weekly_results.attendance_status`
-- Beers -> `weekly_results.beers`
 - Paid -> `weekly_results.paid_status`
 - Partner -> match participant/team relationship, but active data uses `-`
 - Match Result -> `weekly_results.match_result`

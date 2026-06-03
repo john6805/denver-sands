@@ -34,7 +34,12 @@ cp apps/web/.env.example apps/web/.env.local
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
 NEXT_PUBLIC_SUPABASE_ANON_KEY=replace-with-local-anon-key
+SUPABASE_SERVICE_ROLE_KEY=replace-with-server-only-service-role-key
 ```
+
+The Next.js server layer owns Supabase reads and writes. The service role key is
+server-only and should not be prefixed with `NEXT_PUBLIC_`; local development can
+fall back to the anon key when service-role access is not configured.
 
 4. Start the web app:
 
@@ -52,6 +57,20 @@ pnpm typecheck
 pnpm test
 pnpm build
 ```
+
+## Database Verification
+
+The local test suite statically verifies the Phase 1 migration and seed files. Full database verification still requires a configured Supabase project.
+
+With Supabase configured, run:
+
+```bash
+supabase db reset
+pnpm db:seed
+pnpm db:seed
+```
+
+The second seed run should complete without duplicate-record errors. Use the `/admin` page to verify season, roster, course, weekly event, and tee-time create/edit/delete flows against that database.
 
 ## Placeholder Routes
 

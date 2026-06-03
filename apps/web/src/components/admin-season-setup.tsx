@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   AlertCircle,
   CalendarDays,
@@ -15,80 +15,47 @@ import {
 } from "lucide-react";
 
 import {
+  buildCourseHoleUpdates,
   buildCourseUpdate,
+  buildGolferCreate,
   buildGolferUpdates,
+  buildSeasonCreate,
   buildSeasonUpdate,
+  buildWeeklyEventCreate,
   buildTeeTimeUpdate,
   buildWeeklyEventUpdate,
   seasonStatusOptions,
   weekStatusOptions,
   type AdminIssue,
 } from "@/lib/admin-season";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import {
+  createCourse,
+  createRosterGolfer,
+  createSeason,
+  createTeeTime,
+  createWeeklyEvent,
+  deleteTeeTime,
+  getAdminData,
+  updateCourse,
+  updateCourseHoles,
+  updateRosterGolfer,
+  updateSeason,
+  updateTeeTime,
+  updateWeeklyEvent,
+} from "@/app/actions/league-data";
 import { Button } from "@/components/ui/button";
+import type {
+  AdminData,
+  Course,
+  CourseHole,
+  Golfer,
+  SaveResponse,
+  Season,
+  SeasonGolfer,
+  TeeTime,
+  WeeklyEvent,
+} from "@/lib/data/league-data";
 
-type Season = {
-  id: string;
-  name: string;
-  year: number;
-  starts_on: string;
-  ends_on: string | null;
-  status: string;
-};
-
-type Golfer = {
-  id: string;
-  display_name: string;
-  active: boolean;
-};
-
-type SeasonGolfer = {
-  id: string;
-  season_id: string;
-  golfer_id: string;
-  current_handicap: number | null;
-};
-
-type Course = {
-  id: string;
-  name: string;
-  booking_url: string | null;
-  active: boolean;
-};
-
-type CourseHole = {
-  course_id: string;
-  hole_number: number;
-};
-
-type WeeklyEvent = {
-  id: string;
-  season_id: string;
-  week_code: string;
-  play_date: string;
-  course_id: string | null;
-  status: string;
-};
-
-type TeeTime = {
-  id: string;
-  weekly_event_id: string;
-  starts_at: string;
-  sort_order: number;
-};
-
-type AdminData = {
-  season: Season;
-  golfers: Golfer[];
-  seasonGolfers: SeasonGolfer[];
-  courses: Course[];
-  courseHoles: CourseHole[];
-  weeklyEvents: WeeklyEvent[];
-  teeTimes: TeeTime[];
-};
-
-type SupabaseClient = ReturnType<typeof createSupabaseBrowserClient>;
-type SaveResponse = { error: { message: string } | null };
 type SaveAction = () => PromiseLike<SaveResponse>;
 
 function issueText(issues: AdminIssue[]) {
@@ -99,86 +66,20 @@ function formatTime(value: string) {
   return value.slice(0, 5);
 }
 
-function useAdminData(client: SupabaseClient) {
+function useAdminData() {
   const [data, setData] = useState<AdminData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!client) {
-      setLoading(false);
-      setError("Add Supabase environment variables to edit season setup data.");
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
-    const { data: seasons, error: seasonsError } = await client
-      .from("seasons")
-      .select("id,name,year,starts_on,ends_on,status")
-      .order("year", { ascending: false })
-      .limit(1);
-
-    if (seasonsError || !seasons?.[0]) {
-      setError(seasonsError?.message ?? "Seed a season before editing setup.");
-      setLoading(false);
-      return;
-    }
-
-    const season = seasons[0] as Season;
-    const [
-      golfersResponse,
-      seasonGolfersResponse,
-      coursesResponse,
-      courseHolesResponse,
-      weeklyEventsResponse,
-      teeTimesResponse,
-    ] = await Promise.all([
-      client.from("golfers").select("id,display_name,active").order("display_name"),
-      client
-        .from("season_golfers")
-        .select("id,season_id,golfer_id,current_handicap")
-        .eq("season_id", season.id),
-      client.from("courses").select("id,name,booking_url,active").order("name"),
-      client.from("course_holes").select("course_id,hole_number"),
-      client
-        .from("weekly_events")
-        .select("id,season_id,week_code,play_date,course_id,status")
-        .eq("season_id", season.id)
-        .order("play_date"),
-      client
-        .from("weekly_tee_times")
-        .select("id,weekly_event_id,starts_at,sort_order")
-        .order("sort_order"),
-    ]);
-
-    const firstError = [
-      golfersResponse.error,
-      seasonGolfersResponse.error,
-      coursesResponse.error,
-      courseHolesResponse.error,
-      weeklyEventsResponse.error,
-      teeTimesResponse.error,
-    ].find(Boolean);
-
-    if (firstError) {
-      setError(firstError.message);
-      setLoading(false);
-      return;
-    }
-
-    setData({
-      season,
-      golfers: (golfersResponse.data ?? []) as Golfer[],
-      seasonGolfers: (seasonGolfersResponse.data ?? []) as SeasonGolfer[],
-      courses: (coursesResponse.data ?? []) as Course[],
-      courseHoles: (courseHolesResponse.data ?? []) as CourseHole[],
-      weeklyEvents: (weeklyEventsResponse.data ?? []) as WeeklyEvent[],
-      teeTimes: (teeTimesResponse.data ?? []) as TeeTime[],
-    });
+    const response = await getAdminData();
+    setData(response.data);
+    setError(response.error);
     setLoading(false);
-  }, [client]);
+  }, []);
 
   useEffect(() => {
     void Promise.resolve().then(load);
@@ -188,8 +89,7 @@ function useAdminData(client: SupabaseClient) {
 }
 
 export function AdminSeasonSetup() {
-  const client = useMemo(() => createSupabaseBrowserClient(), []);
-  const { data, loading, error, reload } = useAdminData(client);
+  const { data, loading, error, reload } = useAdminData();
   const [saving, setSaving] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -221,19 +121,25 @@ export function AdminSeasonSetup() {
     );
   }
 
-  if (error || !data || !client) {
+  if (error || !data) {
     return (
-      <section className="rounded-lg border border-dashed p-6">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="mt-1 size-5 text-destructive" aria-hidden="true" />
-          <div>
-            <h1 className="text-2xl font-semibold">Season Setup Admin</h1>
-            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-              {error ?? "Supabase is not configured for this browser session."}
-            </p>
+      <div className="space-y-6">
+        <section className="rounded-lg border border-dashed p-6">
+          <div className="flex items-start gap-3">
+            <AlertCircle
+              className="mt-1 size-5 text-destructive"
+              aria-hidden="true"
+            />
+            <div>
+              <h1 className="text-2xl font-semibold">Season Setup Admin</h1>
+              <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+                {error ?? "Seed or create a season before editing setup data."}
+              </p>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+        <NewSeasonSection saving={saving} onSave={save} />
+      </div>
     );
   }
 
@@ -259,27 +165,25 @@ export function AdminSeasonSetup() {
       </header>
 
       <SeasonSection
-        client={client}
         season={data.season}
         saving={saving}
         onSave={save}
       />
       <RosterSection
-        client={client}
+        season={data.season}
         golfers={data.golfers}
         seasonGolfers={data.seasonGolfers}
         saving={saving}
         onSave={save}
       />
       <CoursesSection
-        client={client}
         courses={data.courses}
         courseHoles={data.courseHoles}
         saving={saving}
         onSave={save}
       />
       <ScheduleSection
-        client={client}
+        season={data.season}
         courses={data.courses}
         weeklyEvents={data.weeklyEvents}
         teeTimes={data.teeTimes}
@@ -306,13 +210,122 @@ function selectClassName() {
   return "h-9 w-full rounded-md border bg-background px-2 text-sm shadow-xs";
 }
 
+function currentYearInput() {
+  return new Date().getFullYear().toString();
+}
+
+function currentDateInput() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function NewSeasonSection({
+  saving,
+  onSave,
+}: {
+  saving: string | null;
+  onSave: (
+    key: string,
+    action: SaveAction,
+  ) => Promise<void>;
+}) {
+  const [name, setName] = useState("");
+  const [year, setYear] = useState(currentYearInput);
+  const [startsOn, setStartsOn] = useState(currentDateInput);
+  const [endsOn, setEndsOn] = useState("");
+  const [status, setStatus] = useState("draft");
+  const [issues, setIssues] = useState<AdminIssue[]>([]);
+
+  async function submit() {
+    const create = buildSeasonCreate({
+      name,
+      year,
+      starts_on: startsOn,
+      ends_on: endsOn,
+      status,
+    });
+
+    if (!create.ok) {
+      setIssues(create.issues);
+      return;
+    }
+
+    setIssues([]);
+    await onSave("new-season", () => createSeason(create.values));
+  }
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center gap-2">
+        <CalendarDays className="size-5" aria-hidden="true" />
+        <h2 className="text-xl font-semibold">Create Season</h2>
+      </div>
+      <div className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1.4fr_0.6fr_1fr_1fr_1fr_auto] md:items-end">
+        <label className="space-y-1 text-sm">
+          <span className="font-medium">Name</span>
+          <input
+            className={inputClassName()}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+          />
+        </label>
+        <label className="space-y-1 text-sm">
+          <span className="font-medium">Year</span>
+          <input
+            className={inputClassName()}
+            inputMode="numeric"
+            value={year}
+            onChange={(event) => setYear(event.target.value)}
+          />
+        </label>
+        <label className="space-y-1 text-sm">
+          <span className="font-medium">Start date</span>
+          <input
+            className={inputClassName()}
+            type="date"
+            value={startsOn}
+            onChange={(event) => setStartsOn(event.target.value)}
+          />
+        </label>
+        <label className="space-y-1 text-sm">
+          <span className="font-medium">End date</span>
+          <input
+            className={inputClassName()}
+            type="date"
+            value={endsOn}
+            onChange={(event) => setEndsOn(event.target.value)}
+          />
+        </label>
+        <label className="space-y-1 text-sm">
+          <span className="font-medium">Status</span>
+          <select
+            className={selectClassName()}
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
+          >
+            {seasonStatusOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+        <Button onClick={submit} disabled={saving === "new-season"}>
+          <Plus aria-hidden="true" />
+          Create
+        </Button>
+        <div className="md:col-span-6">
+          <FieldError issues={issues} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function SeasonSection({
-  client,
   season,
   saving,
   onSave,
 }: {
-  client: NonNullable<SupabaseClient>;
   season: Season;
   saving: string | null;
   onSave: (
@@ -334,12 +347,7 @@ function SeasonSection({
     }
 
     setIssues([]);
-    await onSave("season", () =>
-      client
-        .from("seasons")
-        .update({ ...update.values, updated_at: new Date().toISOString() })
-        .eq("id", season.id),
-    );
+    await onSave("season", () => updateSeason(season.id, update.values));
   }
 
   return (
@@ -397,13 +405,13 @@ function SeasonSection({
 }
 
 function RosterSection({
-  client,
+  season,
   golfers,
   seasonGolfers,
   saving,
   onSave,
 }: {
-  client: NonNullable<SupabaseClient>;
+  season: Season;
   golfers: Golfer[];
   seasonGolfers: SeasonGolfer[];
   saving: string | null;
@@ -436,10 +444,14 @@ function RosterSection({
             </tr>
           </thead>
           <tbody>
+            <NewRosterRow
+              season={season}
+              saving={saving}
+              onSave={onSave}
+            />
             {roster.map(({ golfer, seasonGolfer }) => (
               <RosterRow
                 key={golfer.id}
-                client={client}
                 golfer={golfer}
                 seasonGolfer={seasonGolfer as SeasonGolfer}
                 saving={saving}
@@ -453,14 +465,94 @@ function RosterSection({
   );
 }
 
+function NewRosterRow({
+  season,
+  saving,
+  onSave,
+}: {
+  season: Season;
+  saving: string | null;
+  onSave: (
+    key: string,
+    action: SaveAction,
+  ) => Promise<void>;
+}) {
+  const [displayName, setDisplayName] = useState("");
+  const [active, setActive] = useState(true);
+  const [handicap, setHandicap] = useState("");
+  const [issues, setIssues] = useState<AdminIssue[]>([]);
+
+  async function submit() {
+    const create = buildGolferCreate({
+      display_name: displayName,
+      active,
+      current_handicap: handicap,
+    });
+
+    if (!create.ok) {
+      setIssues(create.issues);
+      return;
+    }
+
+    setIssues([]);
+    await onSave("new-roster", () => createRosterGolfer(season, create.values));
+
+    setDisplayName("");
+    setHandicap("");
+    setActive(true);
+  }
+
+  return (
+    <tr className="border-t bg-muted/30 align-top">
+      <td className="px-3 py-2">
+        <input
+          className={inputClassName()}
+          placeholder="New golfer"
+          value={displayName}
+          onChange={(event) => setDisplayName(event.target.value)}
+        />
+      </td>
+      <td className="px-3 py-2">
+        <input
+          className={inputClassName()}
+          inputMode="decimal"
+          placeholder="Handicap"
+          value={handicap}
+          onChange={(event) => setHandicap(event.target.value)}
+        />
+        <FieldError issues={issues} />
+      </td>
+      <td className="px-3 py-2">
+        <label className="inline-flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={active}
+            onChange={(event) => setActive(event.target.checked)}
+          />
+          Active
+        </label>
+      </td>
+      <td className="px-3 py-2 text-right">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={submit}
+          disabled={saving === "new-roster"}
+        >
+          <Plus aria-hidden="true" />
+          Add
+        </Button>
+      </td>
+    </tr>
+  );
+}
+
 function RosterRow({
-  client,
   golfer,
   seasonGolfer,
   saving,
   onSave,
 }: {
-  client: NonNullable<SupabaseClient>;
   golfer: Golfer;
   seasonGolfer: SeasonGolfer;
   saving: string | null;
@@ -488,24 +580,9 @@ function RosterRow({
     }
 
     setIssues([]);
-    await onSave(key, async () => {
-      const golferResponse = await client
-        .from("golfers")
-        .update({ ...update.values.golfer, updated_at: new Date().toISOString() })
-        .eq("id", golfer.id);
-
-      if (golferResponse.error) {
-        return golferResponse;
-      }
-
-      return client
-        .from("season_golfers")
-        .update({
-          ...update.values.seasonGolfer,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", seasonGolfer.id);
-    });
+    await onSave(key, () =>
+      updateRosterGolfer(golfer.id, seasonGolfer.id, update.values),
+    );
   }
 
   return (
@@ -546,13 +623,11 @@ function RosterRow({
 }
 
 function CoursesSection({
-  client,
   courses,
   courseHoles,
   saving,
   onSave,
 }: {
-  client: NonNullable<SupabaseClient>;
   courses: Course[];
   courseHoles: CourseHole[];
   saving: string | null;
@@ -561,12 +636,6 @@ function CoursesSection({
     action: SaveAction,
   ) => Promise<void>;
 }) {
-  const holeCounts = new Map<string, number>();
-
-  for (const hole of courseHoles) {
-    holeCounts.set(hole.course_id, (holeCounts.get(hole.course_id) ?? 0) + 1);
-  }
-
   return (
     <section className="space-y-4">
       <div className="flex items-center gap-2">
@@ -574,12 +643,12 @@ function CoursesSection({
         <h2 className="text-xl font-semibold">Courses</h2>
       </div>
       <div className="grid gap-3 lg:grid-cols-2">
+        <NewCourseRow saving={saving} onSave={onSave} />
         {courses.map((course) => (
           <CourseRow
             key={course.id}
-            client={client}
             course={course}
-            holeCount={holeCounts.get(course.id) ?? 0}
+            courseHoles={courseHoles.filter((hole) => hole.course_id === course.id)}
             saving={saving}
             onSave={onSave}
           />
@@ -589,16 +658,93 @@ function CoursesSection({
   );
 }
 
-function CourseRow({
-  client,
-  course,
-  holeCount,
+function NewCourseRow({
   saving,
   onSave,
 }: {
-  client: NonNullable<SupabaseClient>;
+  saving: string | null;
+  onSave: (
+    key: string,
+    action: SaveAction,
+  ) => Promise<void>;
+}) {
+  const [name, setName] = useState("");
+  const [bookingUrl, setBookingUrl] = useState("");
+  const [active, setActive] = useState(true);
+  const [issues, setIssues] = useState<AdminIssue[]>([]);
+
+  async function submit() {
+    const create = buildCourseUpdate({
+      name,
+      booking_url: bookingUrl,
+      active,
+    });
+
+    if (!create.ok) {
+      setIssues(create.issues);
+      return;
+    }
+
+    setIssues([]);
+    await onSave("new-course", () => createCourse(create.values));
+    setName("");
+    setBookingUrl("");
+    setActive(true);
+  }
+
+  return (
+    <div className="space-y-3 rounded-lg border border-dashed p-4">
+      <span className="rounded-full bg-muted px-2 py-1 text-xs">
+        New course
+      </span>
+      <label className="space-y-1 text-sm">
+        <span className="font-medium">Course name</span>
+        <input
+          className={inputClassName()}
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+        />
+      </label>
+      <label className="space-y-1 text-sm">
+        <span className="font-medium">Booking URL</span>
+        <input
+          className={inputClassName()}
+          value={bookingUrl}
+          onChange={(event) => setBookingUrl(event.target.value)}
+        />
+      </label>
+      <div className="flex items-center justify-between gap-3">
+        <label className="inline-flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={active}
+            onChange={(event) => setActive(event.target.checked)}
+          />
+          Active
+        </label>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={submit}
+          disabled={saving === "new-course"}
+        >
+          <Plus aria-hidden="true" />
+          Add
+        </Button>
+      </div>
+      <FieldError issues={issues} />
+    </div>
+  );
+}
+
+function CourseRow({
+  course,
+  courseHoles,
+  saving,
+  onSave,
+}: {
   course: Course;
-  holeCount: number;
+  courseHoles: CourseHole[];
   saving: string | null;
   onSave: (
     key: string,
@@ -610,6 +756,7 @@ function CourseRow({
   const [bookingUrl, setBookingUrl] = useState(course.booking_url ?? "");
   const [active, setActive] = useState(course.active);
   const [issues, setIssues] = useState<AdminIssue[]>([]);
+  const readiness = courseReadiness(courseHoles);
 
   async function submit() {
     const update = buildCourseUpdate({
@@ -624,12 +771,7 @@ function CourseRow({
     }
 
     setIssues([]);
-    await onSave(key, () =>
-      client
-        .from("courses")
-        .update({ ...update.values, updated_at: new Date().toISOString() })
-        .eq("id", course.id),
-    );
+    await onSave(key, () => updateCourse(course.id, update.values));
   }
 
   return (
@@ -637,14 +779,12 @@ function CourseRow({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span
           className={
-            holeCount === 18
+            readiness.ready
               ? "rounded-full bg-muted px-2 py-1 text-xs"
               : "rounded-full bg-destructive/10 px-2 py-1 text-xs text-destructive"
           }
         >
-          {holeCount === 18
-            ? "18 holes ready"
-            : `${holeCount}/18 course holes entered`}
+          {readiness.label}
         </span>
         {course.booking_url ? (
           <a
@@ -694,19 +834,155 @@ function CourseRow({
         </Button>
       </div>
       <FieldError issues={issues} />
+      <CourseHoleEditor
+        course={course}
+        courseHoles={courseHoles}
+        saving={saving}
+        onSave={onSave}
+      />
+    </div>
+  );
+}
+
+function courseReadiness(courseHoles: CourseHole[]) {
+  const holes = new Set(courseHoles.map((hole) => hole.hole_number));
+  const ranks = new Set(courseHoles.map((hole) => hole.handicap_rank));
+  const ready = holes.size === 18 && ranks.size === 18;
+
+  return {
+    ready,
+    label: ready
+      ? "Stroke allocation ready"
+      : `${holes.size}/18 holes and ${ranks.size}/18 ranks entered`,
+  };
+}
+
+export function CourseHoleEditor({
+  course,
+  courseHoles,
+  saving,
+  onSave,
+}: {
+  course: Course;
+  courseHoles: CourseHole[];
+  saving: string | null;
+  onSave: (
+    key: string,
+    action: SaveAction,
+  ) => Promise<void>;
+}) {
+  const key = `course-holes-${course.id}`;
+  const holeMap = new Map(
+    courseHoles.map((hole) => [hole.hole_number, hole]),
+  );
+  const [rows, setRows] = useState(() =>
+    Array.from({ length: 18 }, (_, index) => {
+      const holeNumber = index + 1;
+      const hole = holeMap.get(holeNumber);
+
+      return {
+        hole_number: holeNumber,
+        par: hole?.par?.toString() ?? "",
+        handicap_rank: hole?.handicap_rank?.toString() ?? "",
+      };
+    }),
+  );
+  const [issues, setIssues] = useState<AdminIssue[]>([]);
+
+  function updateRow(
+    holeNumber: number,
+    field: "par" | "handicap_rank",
+    value: string,
+  ) {
+    setRows((current) =>
+      current.map((row) =>
+        row.hole_number === holeNumber ? { ...row, [field]: value } : row,
+      ),
+    );
+  }
+
+  async function submit() {
+    const update = buildCourseHoleUpdates(rows);
+
+    if (!update.ok) {
+      setIssues(update.issues);
+      return;
+    }
+
+    setIssues([]);
+    await onSave(key, () => updateCourseHoles(course.id, update.values));
+  }
+
+  return (
+    <div className="space-y-3 border-t pt-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 className="text-sm font-semibold">Hole handicap ratings</h3>
+          <p className="text-xs text-muted-foreground">
+            Handicap ranks 1-18 are required before match generation can use
+            this course.
+          </p>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={submit}
+          disabled={saving === key}
+        >
+          <Save aria-hidden="true" />
+          Save holes
+        </Button>
+      </div>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+        {rows.map((row) => (
+          <div
+            key={row.hole_number}
+            className="grid grid-cols-[auto_1fr_1fr] items-center gap-1 rounded-md border p-2 text-xs"
+          >
+            <span className="font-semibold">#{row.hole_number}</span>
+            <label className="space-y-1">
+              <span className="sr-only">Hole {row.hole_number} par</span>
+              <input
+                className="h-8 w-full rounded-md border bg-background px-2"
+                inputMode="numeric"
+                placeholder="Par"
+                value={row.par}
+                onChange={(event) =>
+                  updateRow(row.hole_number, "par", event.target.value)
+                }
+              />
+            </label>
+            <label className="space-y-1">
+              <span className="sr-only">
+                Hole {row.hole_number} handicap rank
+              </span>
+              <input
+                className="h-8 w-full rounded-md border bg-background px-2"
+                inputMode="numeric"
+                placeholder="Rank"
+                value={row.handicap_rank}
+                onChange={(event) =>
+                  updateRow(row.hole_number, "handicap_rank", event.target.value)
+                }
+              />
+            </label>
+          </div>
+        ))}
+      </div>
+      <FieldError issues={issues} />
     </div>
   );
 }
 
 function ScheduleSection({
-  client,
+  season,
   courses,
   weeklyEvents,
   teeTimes,
   saving,
   onSave,
 }: {
-  client: NonNullable<SupabaseClient>;
+  season: Season;
   courses: Course[];
   weeklyEvents: WeeklyEvent[];
   teeTimes: TeeTime[];
@@ -723,10 +999,15 @@ function ScheduleSection({
         <h2 className="text-xl font-semibold">Weekly Schedule And Tee Times</h2>
       </div>
       <div className="space-y-3">
+        <NewScheduleRow
+          season={season}
+          courses={courses}
+          saving={saving}
+          onSave={onSave}
+        />
         {weeklyEvents.map((event) => (
           <ScheduleRow
             key={event.id}
-            client={client}
             event={event}
             courses={courses}
             teeTimes={teeTimes.filter((time) => time.weekly_event_id === event.id)}
@@ -739,15 +1020,118 @@ function ScheduleSection({
   );
 }
 
+function NewScheduleRow({
+  season,
+  courses,
+  saving,
+  onSave,
+}: {
+  season: Season;
+  courses: Course[];
+  saving: string | null;
+  onSave: (
+    key: string,
+    action: SaveAction,
+  ) => Promise<void>;
+}) {
+  const [weekCode, setWeekCode] = useState("");
+  const [playDate, setPlayDate] = useState("");
+  const [courseId, setCourseId] = useState("");
+  const [status, setStatus] = useState("planned");
+  const [issues, setIssues] = useState<AdminIssue[]>([]);
+
+  async function submit() {
+    const create = buildWeeklyEventCreate({
+      week_code: weekCode,
+      play_date: playDate,
+      course_id: courseId,
+      status,
+    });
+
+    if (!create.ok) {
+      setIssues(create.issues);
+      return;
+    }
+
+    setIssues([]);
+    await onSave("new-week", () =>
+      createWeeklyEvent(season.id, create.values),
+    );
+    setWeekCode("");
+    setPlayDate("");
+    setCourseId("");
+    setStatus("planned");
+  }
+
+  return (
+    <div className="rounded-lg border border-dashed bg-muted/30 p-4">
+      <div className="grid gap-3 lg:grid-cols-[0.7fr_1fr_1fr_1fr_auto] lg:items-end">
+        <label className="space-y-1 text-sm">
+          <span className="font-medium">Week code</span>
+          <input
+            className={inputClassName()}
+            placeholder="W22"
+            value={weekCode}
+            onChange={(event) => setWeekCode(event.target.value)}
+          />
+        </label>
+        <label className="space-y-1 text-sm">
+          <span className="font-medium">Play date</span>
+          <input
+            className={inputClassName()}
+            type="date"
+            value={playDate}
+            onChange={(event) => setPlayDate(event.target.value)}
+          />
+        </label>
+        <label className="space-y-1 text-sm">
+          <span className="font-medium">Course</span>
+          <select
+            className={selectClassName()}
+            value={courseId}
+            onChange={(item) => setCourseId(item.target.value)}
+          >
+            <option value="">No course yet</option>
+            {courses.map((course) => (
+              <option key={course.id} value={course.id}>
+                {course.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-1 text-sm">
+          <span className="font-medium">Week status</span>
+          <select
+            className={selectClassName()}
+            value={status}
+            onChange={(item) => setStatus(item.target.value)}
+          >
+            {weekStatusOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+        <Button onClick={submit} disabled={saving === "new-week"}>
+          <Plus aria-hidden="true" />
+          Add
+        </Button>
+      </div>
+      <div className="mt-2">
+        <FieldError issues={issues} />
+      </div>
+    </div>
+  );
+}
+
 function ScheduleRow({
-  client,
   event,
   courses,
   teeTimes,
   saving,
   onSave,
 }: {
-  client: NonNullable<SupabaseClient>;
   event: WeeklyEvent;
   courses: Course[];
   teeTimes: TeeTime[];
@@ -775,12 +1159,7 @@ function ScheduleRow({
     }
 
     setIssues([]);
-    await onSave(key, () =>
-      client
-        .from("weekly_events")
-        .update({ ...update.values, updated_at: new Date().toISOString() })
-        .eq("id", event.id),
-    );
+    await onSave(key, () => updateWeeklyEvent(event.id, update.values));
   }
 
   async function addTeeTime() {
@@ -793,11 +1172,7 @@ function ScheduleRow({
 
     setIssues([]);
     await onSave(`new-time-${event.id}`, () =>
-      client.from("weekly_tee_times").insert({
-        weekly_event_id: event.id,
-        starts_at: update.values.starts_at,
-        sort_order: teeTimes.length + 1,
-      }),
+      createTeeTime(event.id, teeTimes.length + 1, update.values),
     );
     setNewTime("");
   }
@@ -852,7 +1227,6 @@ function ScheduleRow({
         {teeTimes.map((teeTime) => (
           <TeeTimePill
             key={teeTime.id}
-            client={client}
             teeTime={teeTime}
             saving={saving}
             onSave={onSave}
@@ -884,12 +1258,10 @@ function ScheduleRow({
 }
 
 function TeeTimePill({
-  client,
   teeTime,
   saving,
   onSave,
 }: {
-  client: NonNullable<SupabaseClient>;
   teeTime: TeeTime;
   saving: string | null;
   onSave: (
@@ -908,10 +1280,7 @@ function TeeTimePill({
     }
 
     await onSave(key, () =>
-      client
-        .from("weekly_tee_times")
-        .update({ ...update.values, updated_at: new Date().toISOString() })
-        .eq("id", teeTime.id),
+      updateTeeTime(teeTime.id, update.values),
     );
   }
 
@@ -930,9 +1299,7 @@ function TeeTimePill({
         aria-label="Delete tee time"
         disabled={saving === key}
         onClick={() =>
-          onSave(key, () =>
-            client.from("weekly_tee_times").delete().eq("id", teeTime.id),
-          )
+          onSave(key, () => deleteTeeTime(teeTime.id))
         }
       >
         <Trash2 aria-hidden="true" />

@@ -1,6 +1,5 @@
-import { PlaceholderPage } from "@/components/placeholder-page";
-import { getPlaceholderPage } from "@/lib/page-content";
+import { HandicapSnapshotReview } from "@/components/handicap-snapshot-review";
 
 export default function HandicapHistoryPage() {
-  return <PlaceholderPage page={getPlaceholderPage("/handicap-history")} />;
+  return <HandicapSnapshotReview />;
 }
