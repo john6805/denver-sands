@@ -9,7 +9,7 @@ import { LeaderboardTable, RawLeaderboardView } from "@/components/raw-leaderboa
 import { calculateRawLeaderboard } from "@/lib/leaderboard";
 
 describe("raw leaderboard rendering", () => {
-  it("calculates and renders raw leaderboard rows", () => {
+  it("renders public official standings from leaderboard calculation rows", () => {
     const rows = calculateRawLeaderboard({
       golfers: [{ id: "zach", displayName: "Zach" }],
       weeks: [{ id: "w1", status: "completed" }],
@@ -32,10 +32,31 @@ describe("raw leaderboard rendering", () => {
     const html = renderToStaticMarkup(<LeaderboardTable rows={rows} />);
 
     expect(html).toContain("Zach");
+    expect(html).toContain("Official/proj pts");
     expect(html).toContain("Raw pts");
+    expect(html).toContain("Raw rank");
     expect(html).toContain("Pts + beer");
+    expect(html).toContain(">0<");
     expect(html).toContain(">23<");
     expect(html).toContain(">24<");
+  });
+
+  it("does not render admin result or correction controls", () => {
+    const html = renderToStaticMarkup(
+      <LeaderboardTable
+        rows={calculateRawLeaderboard({
+          golfers: [{ id: "zach", displayName: "Zach" }],
+          weeks: [{ id: "w1", status: "completed" }],
+          results: [],
+        })}
+      />,
+    );
+
+    expect(html).not.toContain("Save results");
+    expect(html).not.toContain("Save correction");
+    expect(html).not.toContain("Lock week");
+    expect(html).not.toContain("Correction reason");
+    expect(html).not.toContain("Refresh");
   });
 
   it("keeps the client view importable without server action setup", () => {

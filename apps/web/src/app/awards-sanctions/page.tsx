@@ -1,6 +1,5 @@
-import { PlaceholderPage } from "@/components/placeholder-page";
-import { getPlaceholderPage } from "@/lib/page-content";
+import { AwardsSanctionsPreview } from "@/components/awards-sanctions-preview";
 
 export default function AwardsSanctionsPage() {
-  return <PlaceholderPage page={getPlaceholderPage("/awards-sanctions")} />;
+  return <AwardsSanctionsPreview />;
 }

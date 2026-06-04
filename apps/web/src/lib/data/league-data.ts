@@ -16,9 +16,13 @@ export type Season = {
   starts_on: string;
   ends_on: string | null;
   status: string;
+  drop_lowest_week_count: number;
 };
 
-export type SeasonSummary = Pick<Season, "id" | "name" | "year">;
+export type SeasonSummary = Pick<
+  Season,
+  "id" | "name" | "year" | "drop_lowest_week_count"
+>;
 
 export type Golfer = {
   id: string;

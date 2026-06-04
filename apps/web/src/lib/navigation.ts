@@ -49,7 +49,7 @@ export const primaryNavItems: NavItem[] = [
   {
     href: "/leaderboard",
     label: "Leaderboard",
-    description: "Raw and official standings placeholder",
+    description: "Public raw and official standings",
     icon: Trophy,
   },
   {

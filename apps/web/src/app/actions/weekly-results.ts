@@ -29,7 +29,7 @@ export async function getBreakdownData(): Promise<ActionResult<BreakdownData>> {
 
   const { data: seasons, error: seasonsError } = await client
     .from("seasons")
-    .select("id,name,year")
+    .select("id,name,year,drop_lowest_week_count")
     .order("year", { ascending: false })
     .limit(1);
 

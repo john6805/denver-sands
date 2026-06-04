@@ -111,7 +111,7 @@ export const placeholderPages: PlaceholderPage[] = [
     eyebrow: "Standings",
     href: "/leaderboard",
     description:
-      "Placeholder for raw points, official points after drops, and supporting season stats.",
+      "Read-only league standings with raw points, official points after drops, and supporting season stats.",
     plannedScope: [
       "Calculate standings dynamically from weekly results.",
       "Show raw and official points separately.",

@@ -1,10 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 
 import { getLeaderboardData } from "@/app/actions/leaderboard";
-import { Button } from "@/components/ui/button";
 import {
   calculateRawLeaderboard,
   type RawLeaderboardRow,
@@ -23,8 +22,13 @@ export function LeaderboardTable({ rows }: { rows: RawLeaderboardRow[] }) {
           <tr>
             <th className="px-3 py-2 font-medium">Rank</th>
             <th className="px-3 py-2 font-medium">Golfer</th>
-            <th className="px-3 py-2 text-right font-medium">Raw pts</th>
+            <th className="px-3 py-2 text-right font-medium">
+              Official/proj pts
+            </th>
             <th className="px-3 py-2 text-right font-medium">Behind</th>
+            <th className="px-3 py-2 text-right font-medium">Raw pts</th>
+            <th className="px-3 py-2 text-right font-medium">Raw rank</th>
+            <th className="px-3 py-2 text-right font-medium">Dropped</th>
             <th className="px-3 py-2 text-right font-medium">Wins</th>
             <th className="px-3 py-2 text-right font-medium">No-shows</th>
             <th className="px-3 py-2 text-right font-medium">Blanks</th>
@@ -38,10 +42,19 @@ export function LeaderboardTable({ rows }: { rows: RawLeaderboardRow[] }) {
         <tbody>
           {rows.map((row) => (
             <tr key={row.golferId} className="border-t">
-              <td className="px-3 py-2">{row.rank}</td>
+              <td className="px-3 py-2">{row.officialRank}</td>
               <td className="px-3 py-2 font-medium">{row.golferName}</td>
+              <td className="px-3 py-2 text-right">{row.officialPoints}</td>
+              <td className="px-3 py-2 text-right">
+                {row.officialPointsBehind}
+              </td>
               <td className="px-3 py-2 text-right">{row.rawPoints}</td>
-              <td className="px-3 py-2 text-right">{row.pointsBehind}</td>
+              <td className="px-3 py-2 text-right">
+                {row.rank}
+              </td>
+              <td className="px-3 py-2 text-right">
+                {row.droppedWeekCount > 0 ? row.droppedPoints : "-"}
+              </td>
               <td className="px-3 py-2 text-right">{row.matchWins}</td>
               <td className="px-3 py-2 text-right">{row.noShowCount}</td>
               <td className="px-3 py-2 text-right">{row.blankWeekCount}</td>
@@ -65,7 +78,7 @@ export function LeaderboardTable({ rows }: { rows: RawLeaderboardRow[] }) {
 }
 
 export function RawLeaderboardView() {
-  const { data, loading, error, reload } = useActionData(getLeaderboardData);
+  const { data, loading, error } = useActionData(getLeaderboardData);
   const rows = useMemo(() => {
     if (!data) {
       return [];
@@ -92,6 +105,7 @@ export function RawLeaderboardView() {
         netScore: result.net_score,
         putts: result.putts,
       })),
+      dropLowestWeekCount: data.season.drop_lowest_week_count,
     });
   }, [data]);
 
@@ -128,17 +142,13 @@ export function RawLeaderboardView() {
             {data.season.name}
           </p>
           <h1 className="text-3xl font-semibold tracking-tight">
-            Raw Leaderboard
+            Public Leaderboard
           </h1>
           <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-            Raw season totals from completed and locked weeks. Drop-week
-            official standings come next.
+            Official standings drop each golfer&apos;s lowest eligible completed
+            weeks while preserving raw totals for comparison.
           </p>
         </div>
-        <Button variant="outline" onClick={reload}>
-          <RefreshCw aria-hidden="true" />
-          Refresh
-        </Button>
       </header>
 
       <p className="text-sm text-muted-foreground">

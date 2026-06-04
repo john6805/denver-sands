@@ -13,6 +13,7 @@ const weeks: LeaderboardWeek[] = [
   { id: "w1", status: "completed" },
   { id: "w2", status: "locked" },
   { id: "w3", status: "planned" },
+  { id: "w4", status: "canceled" },
 ];
 
 function result(
@@ -192,6 +193,126 @@ describe("raw leaderboard", () => {
       rawPoints: 18,
       beerTotal: 3,
       pointsPlusBeer: 21,
+    });
+  });
+
+  it("drops each golfer's lowest eligible completed weeks for official standings", () => {
+    const rows = calculateRawLeaderboard({
+      golfers,
+      weeks,
+      dropLowestWeekCount: 2,
+      results: [
+        result({ weeklyEventId: "w1", golferId: "zach" }),
+        result({
+          weeklyEventId: "w2",
+          golferId: "zach",
+          attendanceStatus: "confirmed",
+          grossScore: null,
+          netScore: null,
+          putts: null,
+        }),
+        result({
+          weeklyEventId: "w1",
+          golferId: "joe",
+          attendanceStatus: "no_show",
+          matchResult: "not_applicable",
+          handicapSnapshot: null,
+          grossScore: null,
+          netScore: null,
+          putts: null,
+        }),
+        result({ weeklyEventId: "w2", golferId: "joe" }),
+      ],
+    });
+
+    expect(rows.find((row) => row.golferId === "zach")).toMatchObject({
+      rawPoints: 21,
+      officialPoints: 0,
+      droppedWeekCount: 2,
+      droppedPoints: 21,
+    });
+    expect(rows.find((row) => row.golferId === "joe")).toMatchObject({
+      rawPoints: 18,
+      officialPoints: 0,
+      droppedWeekCount: 2,
+      droppedPoints: 18,
+    });
+  });
+
+  it("excludes planned, canceled, and unknown rows from drop-week eligibility", () => {
+    const rows = calculateRawLeaderboard({
+      golfers,
+      weeks,
+      dropLowestWeekCount: 2,
+      results: [
+        result({
+          weeklyEventId: "w1",
+          golferId: "zach",
+          attendanceStatus: "unknown",
+          matchResult: "not_applicable",
+          handicapSnapshot: null,
+          grossScore: null,
+          netScore: null,
+          putts: null,
+        }),
+        result({ weeklyEventId: "w3", golferId: "zach" }),
+        result({ weeklyEventId: "w4", golferId: "zach" }),
+      ],
+    });
+
+    expect(rows.find((row) => row.golferId === "zach")).toMatchObject({
+      rawPoints: 0,
+      officialPoints: 0,
+      droppedWeekCount: 0,
+      droppedPoints: 0,
+    });
+  });
+
+  it("includes completed no-show weeks as eligible low weeks", () => {
+    const rows = calculateRawLeaderboard({
+      golfers,
+      weeks,
+      dropLowestWeekCount: 1,
+      results: [
+        result({
+          weeklyEventId: "w1",
+          golferId: "zach",
+          attendanceStatus: "no_show",
+          matchResult: "not_applicable",
+          handicapSnapshot: null,
+          grossScore: null,
+          netScore: null,
+          putts: null,
+        }),
+        result({ weeklyEventId: "w2", golferId: "zach" }),
+      ],
+    });
+
+    expect(rows.find((row) => row.golferId === "zach")).toMatchObject({
+      rawPoints: 18,
+      officialPoints: 18,
+      droppedWeekCount: 1,
+      droppedPoints: 0,
+      droppedWeeks: [{ weekId: "w1", totalPoints: 0 }],
+    });
+  });
+
+  it("handles golfers with fewer than or equal to the configured drop count", () => {
+    const rows = calculateRawLeaderboard({
+      golfers,
+      weeks,
+      dropLowestWeekCount: 2,
+      results: [
+        result({ weeklyEventId: "w1", golferId: "zach" }),
+        result({ weeklyEventId: "w2", golferId: "zach" }),
+      ],
+    });
+
+    expect(rows.find((row) => row.golferId === "zach")).toMatchObject({
+      rawPoints: 36,
+      officialPoints: 0,
+      droppedWeekCount: 2,
+      droppedPoints: 36,
     });
   });
 });
