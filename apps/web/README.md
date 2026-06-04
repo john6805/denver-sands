@@ -1,6 +1,6 @@
 # Denver Sands Web App
 
-Next.js app for the Denver Sands golf league operations scaffold.
+Next.js app for Denver Sands golf league operations.
 
 ## Getting Started
 
@@ -22,12 +22,14 @@ pnpm --filter web dev
 pnpm --filter web lint
 pnpm --filter web typecheck
 pnpm --filter web test
+pnpm --filter web test:regression
+pnpm --filter web test:qa
 pnpm --filter web build
 ```
 
 ## Scope
 
-This scaffold includes layout, navigation, placeholder pages, Supabase environment wiring, and a small Vitest smoke test. It does not implement real league business logic yet.
+This app includes admin setup, scoring, match generation, weekly results, leaderboard calculations, audit browsing, tournament/champion calculations, and first-version regression/QA coverage.
 
 Use `docs/` as the source of truth for future tickets.
 

@@ -9,7 +9,9 @@
     "db:seed": "supabase db query --linked --file supabase/seed.sql",
     "lint": "pnpm --filter web lint",
     "typecheck": "pnpm --filter web typecheck",
-    "test": "pnpm --filter web test"
+    "test": "pnpm --filter web test",
+    "test:regression": "pnpm --filter web test:regression",
+    "test:qa": "pnpm --filter web test:qa"
   },
   "devDependencies": {
     "prettier": "^3.8.3"

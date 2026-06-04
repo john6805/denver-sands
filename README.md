@@ -1,8 +1,8 @@
 # Denver Sands Golf League
 
-Web application scaffold for replacing the Denver Sands / Clubhouse Zyndicates spreadsheet workflow.
+Web application for replacing the Denver Sands / Clubhouse Zyndicates spreadsheet workflow.
 
-The current app is intentionally a placeholder shell. It uses the documents in `docs/` as the source of truth and does not implement scoring, match generation, leaderboard, or end-of-season business logic yet.
+The first-version league workflow is implemented through release-readiness QA: admin setup, scoring, match generation, weekly results, leaderboard calculations, audit browsing, regression coverage, and end-of-season calculations all have local service/UI coverage. The documents in `docs/` remain the source of truth for rules, tickets, and follow-up scope.
 
 ## Stack
 
@@ -55,6 +55,8 @@ pnpm dev
 pnpm lint
 pnpm typecheck
 pnpm test
+pnpm test:regression
+pnpm test:qa
 pnpm build
 ```
 
@@ -72,11 +74,28 @@ pnpm db:seed
 
 The second seed run should complete without duplicate-record errors. Use the `/admin` page to verify season, roster, course, weekly event, and tee-time create/edit/delete flows against that database.
 
+## Release Readiness QA
+
+The first-version regression suite protects confirmed spreadsheet behavior:
+
+```bash
+pnpm test:regression
+```
+
+The admin-to-public vertical slice QA check covers one weekly cycle from setup through public leaderboard parity:
+
+```bash
+pnpm test:qa
+```
+
+Manual Supabase/browser QA steps live in `docs/FIRST_ADMIN_TO_PUBLIC_QA.md`.
+
 ## Placeholder Routes
 
 - `/`
 - `/login`
 - `/admin`
+- `/admin/audit`
 - `/schedule`
 - `/players`
 - `/courses`
