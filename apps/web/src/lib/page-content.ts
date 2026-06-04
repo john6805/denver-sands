@@ -155,6 +155,18 @@ export const placeholderPages: PlaceholderPage[] = [
     ],
   },
   {
+    title: "Audit Trail",
+    eyebrow: "Admin",
+    href: "/admin/audit",
+    description:
+      "Read-only browser for locked-week corrections, match generation events, and future overrides.",
+    plannedScope: [
+      "Filter audit events by season, week, entity type, and action.",
+      "Show before and after data with correction reasons.",
+      "Keep audit records immutable from the app UI.",
+    ],
+  },
+  {
     title: "Scoring Rules",
     eyebrow: "Rules Reference",
     href: "/scoring-rules",

@@ -4,6 +4,7 @@ import {
   ClipboardList,
   Flag,
   Gauge,
+  History,
   Home,
   LandPlot,
   LayoutDashboard,
@@ -96,6 +97,12 @@ export const adminNavItems: NavItem[] = [
     label: "Awards and Sanctions",
     description: "Season awards, sanctions, and champions",
     icon: Award,
+  },
+  {
+    href: "/admin/audit",
+    label: "Audit Trail",
+    description: "Read-only correction and override history",
+    icon: History,
   },
 ];
 

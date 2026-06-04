@@ -115,6 +115,20 @@ export type TournamentRoundResult = {
   putts: number | null;
 };
 
+export type AdminAuditEvent = {
+  id: string;
+  actor_id: string | null;
+  season_id: string | null;
+  weekly_event_id: string | null;
+  entity_type: string;
+  entity_id: string;
+  action: string;
+  before_json: unknown;
+  after_json: unknown;
+  reason: string | null;
+  created_at: string;
+};
+
 export type WeeklyResult = {
   id: string;
   weekly_event_id: string;
@@ -168,4 +182,10 @@ export type TournamentData = {
   tournaments: Tournament[];
   tournamentRounds: TournamentRound[];
   tournamentRoundResults: TournamentRoundResult[];
+};
+
+export type AuditTrailData = {
+  seasons: SeasonSummary[];
+  weeklyEvents: WeeklyEventSummary[];
+  auditEvents: AdminAuditEvent[];
 };
