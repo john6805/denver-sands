@@ -87,6 +87,34 @@ export type HandicapSnapshot = {
   half_handicap: number;
 };
 
+export type Tournament = {
+  id: string;
+  season_id: string;
+  course_id: string | null;
+  name: string;
+  starts_on: string | null;
+  ends_on: string | null;
+  status: string;
+};
+
+export type TournamentRound = {
+  id: string;
+  tournament_id: string;
+  round_number: number;
+  play_date: string | null;
+  holes: number;
+  course_id: string | null;
+};
+
+export type TournamentRoundResult = {
+  id: string;
+  tournament_round_id: string;
+  golfer_id: string;
+  handicap_snapshot: number | null;
+  net_score: number | null;
+  putts: number | null;
+};
+
 export type WeeklyResult = {
   id: string;
   weekly_event_id: string;
@@ -129,3 +157,15 @@ export type BreakdownData = {
 };
 
 export type LeaderboardData = BreakdownData;
+
+export type TournamentData = {
+  season: SeasonSummary;
+  golfers: Golfer[];
+  seasonGolfers: SeasonGolfer[];
+  courses: Course[];
+  weeklyEvents: WeeklyEventSummary[];
+  weeklyResults: WeeklyResult[];
+  tournaments: Tournament[];
+  tournamentRounds: TournamentRound[];
+  tournamentRoundResults: TournamentRoundResult[];
+};
