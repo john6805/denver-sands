@@ -1,15 +1,21 @@
 import { describe, expect, it } from "vitest";
 
-import { allPlaceholderPages } from "@/lib/navigation";
-import { placeholderPages } from "@/lib/page-content";
+import { adminNavItems, primaryNavItems } from "@/lib/navigation";
 
-describe("placeholder navigation", () => {
-  it("has content for every placeholder navigation item", () => {
-    const contentHrefs = new Set(placeholderPages.map((page) => page.href));
+describe("navigation", () => {
+  it("only exposes implemented application routes", () => {
+    const hrefs = [...primaryNavItems, ...adminNavItems].map((item) => item.href);
 
-    expect(allPlaceholderPages.length).toBeGreaterThan(0);
-    expect(allPlaceholderPages.every((item) => contentHrefs.has(item.href))).toBe(
-      true,
-    );
+    expect(hrefs).toEqual([
+      "/leaderboard",
+      "/admin",
+      "/match-generator",
+      "/weekly-results",
+      "/handicap-history",
+      "/tournament",
+      "/awards-sanctions",
+      "/admin/audit",
+    ]);
+    expect(hrefs).not.toContain("/login");
   });
 });

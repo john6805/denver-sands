@@ -189,3 +189,15 @@ export type AuditTrailData = {
   weeklyEvents: WeeklyEventSummary[];
   auditEvents: AdminAuditEvent[];
 };
+
+export type MatchGeneratorData = {
+  season: Season;
+  golfers: Golfer[];
+  seasonGolfers: SeasonGolfer[];
+  courses: Course[];
+  courseHoles: CourseHole[];
+  weeklyEvents: WeeklyEvent[];
+  teeTimes: TeeTime[];
+  rsvps: WeeklyRsvp[];
+  snapshots: HandicapSnapshot[];
+};

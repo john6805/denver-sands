@@ -24,7 +24,6 @@ describe("raw leaderboard rendering", () => {
           grossScore: 44,
           netScore: 39,
           putts: 16,
-          beerCount: 1,
         },
       ],
     });
@@ -35,10 +34,10 @@ describe("raw leaderboard rendering", () => {
     expect(html).toContain("Official/proj pts");
     expect(html).toContain("Raw pts");
     expect(html).toContain("Raw rank");
-    expect(html).toContain("Pts + beer");
+    expect(html).not.toContain("Beer");
+    expect(html).not.toContain("beer");
     expect(html).toContain(">0<");
     expect(html).toContain(">23<");
-    expect(html).toContain(">24<");
   });
 
   it("does not render admin result or correction controls", () => {

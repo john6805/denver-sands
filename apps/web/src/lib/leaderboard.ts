@@ -27,7 +27,6 @@ export type LeaderboardResultInput = {
   grossScore: number | null;
   netScore: number | null;
   putts: number | null;
-  beerCount?: number | null;
 };
 
 export type RawLeaderboardRow = {
@@ -49,8 +48,6 @@ export type RawLeaderboardRow = {
   lowestGross: number | null;
   lowestNet: number | null;
   lowestPutts: number | null;
-  beerTotal: number;
-  pointsPlusBeer: number;
 };
 
 export type DroppedLeaderboardWeek = {
@@ -182,8 +179,6 @@ export function calculateRawLeaderboard(input: {
       lowestGross: null,
       lowestNet: null,
       lowestPutts: null,
-      beerTotal: 0,
-      pointsPlusBeer: 0,
     });
   }
   const weeklyTotalsByGolfer = new Map<string, WeeklyLeaderboardTotal[]>();
@@ -227,7 +222,6 @@ export function calculateRawLeaderboard(input: {
       row.matchWins += result.matchResult === "won" ? 1 : 0;
       row.noShowCount += isNoShow(result.attendanceStatus) ? 1 : 0;
       row.blankWeekCount += result.attendanceStatus === "unknown" ? 1 : 0;
-      row.beerTotal += result.beerCount ?? 0;
 
       if (isUsableNumber(result.grossScore)) {
         row.lowestGross =
@@ -260,7 +254,6 @@ export function calculateRawLeaderboard(input: {
     .map((row) => ({
       ...row,
       ...officialTotalsFor(row.golferId, row.rawPoints),
-      pointsPlusBeer: row.rawPoints + row.beerTotal,
     }))
     .sort((left, right) => {
       if (right.rawPoints !== left.rawPoints) {

@@ -176,26 +176,6 @@ describe("raw leaderboard", () => {
     expect(rows.slice(0, 2).map((row) => row.rank)).toEqual([1, 1]);
   });
 
-  it("keeps beer points as a social-only metric", () => {
-    const rows = calculateRawLeaderboard({
-      golfers,
-      weeks,
-      results: [
-        result({
-          weeklyEventId: "w1",
-          golferId: "zach",
-          beerCount: 3,
-        }),
-      ],
-    });
-
-    expect(rows.find((row) => row.golferId === "zach")).toMatchObject({
-      rawPoints: 18,
-      beerTotal: 3,
-      pointsPlusBeer: 21,
-    });
-  });
-
   it("drops each golfer's lowest eligible completed weeks for official standings", () => {
     const rows = calculateRawLeaderboard({
       golfers,

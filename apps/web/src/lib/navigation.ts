@@ -1,63 +1,27 @@
 import {
   Award,
-  CalendarDays,
   ClipboardList,
   Flag,
   Gauge,
   History,
-  Home,
-  LandPlot,
   LayoutDashboard,
-  LogIn,
-  NotebookTabs,
   Shuffle,
   Trophy,
-  Users,
 } from "lucide-react";
 
 export type NavItem = {
   href: string;
   label: string;
   description: string;
-  icon: typeof Home;
+  icon: typeof Trophy;
 };
 
 export const primaryNavItems: NavItem[] = [
-  {
-    href: "/",
-    label: "Home",
-    description: "League operations overview",
-    icon: Home,
-  },
-  {
-    href: "/schedule",
-    label: "Schedule",
-    description: "Season dates, courses, and tee times",
-    icon: CalendarDays,
-  },
-  {
-    href: "/players",
-    label: "Players",
-    description: "Active roster and season golfers",
-    icon: Users,
-  },
-  {
-    href: "/courses",
-    label: "Courses",
-    description: "Course catalog and hole handicap readiness",
-    icon: LandPlot,
-  },
   {
     href: "/leaderboard",
     label: "Leaderboard",
     description: "Public raw and official standings",
     icon: Trophy,
-  },
-  {
-    href: "/scoring-rules",
-    label: "Scoring Rules",
-    description: "Workbook and rules-document scoring reference",
-    icon: NotebookTabs,
   },
 ];
 
@@ -71,13 +35,13 @@ export const adminNavItems: NavItem[] = [
   {
     href: "/match-generator",
     label: "Weekly Match Generator",
-    description: "Future weekly pairing workflow",
+    description: "Draft weekly pairings from confirmed golfers",
     icon: Shuffle,
   },
   {
     href: "/weekly-results",
     label: "Weekly Results",
-    description: "Future result-entry workflow",
+    description: "Weekly result review and point breakdowns",
     icon: ClipboardList,
   },
   {
@@ -89,7 +53,7 @@ export const adminNavItems: NavItem[] = [
   {
     href: "/tournament",
     label: "End-of-Season Tournament",
-    description: "Two-round tournament placeholder",
+    description: "Two-round tournament setup and standings",
     icon: Flag,
   },
   {
@@ -104,19 +68,4 @@ export const adminNavItems: NavItem[] = [
     description: "Read-only correction and override history",
     icon: History,
   },
-];
-
-export const utilityNavItems: NavItem[] = [
-  {
-    href: "/login",
-    label: "Login",
-    description: "Supabase auth placeholder",
-    icon: LogIn,
-  },
-];
-
-export const allPlaceholderPages: NavItem[] = [
-  ...primaryNavItems,
-  ...adminNavItems,
-  ...utilityNavItems,
 ];

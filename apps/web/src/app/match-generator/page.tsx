@@ -1,6 +1,5 @@
-import { PlaceholderPage } from "@/components/placeholder-page";
-import { getPlaceholderPage } from "@/lib/page-content";
+import { MatchGeneratorView } from "@/components/match-generator";
 
 export default function MatchGeneratorPage() {
-  return <PlaceholderPage page={getPlaceholderPage("/match-generator")} />;
+  return <MatchGeneratorView />;
 }

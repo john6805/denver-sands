@@ -90,22 +90,18 @@ pnpm test:qa
 
 Manual Supabase/browser QA steps live in `docs/FIRST_ADMIN_TO_PUBLIC_QA.md`.
 
-## Placeholder Routes
+## App Routes
 
-- `/`
-- `/login`
 - `/admin`
 - `/admin/audit`
-- `/schedule`
-- `/players`
-- `/courses`
 - `/match-generator`
 - `/weekly-results`
 - `/leaderboard`
 - `/handicap-history`
 - `/tournament`
 - `/awards-sanctions`
-- `/scoring-rules`
+
+The root route redirects to `/leaderboard`.
 
 ## Implementation Notes
 

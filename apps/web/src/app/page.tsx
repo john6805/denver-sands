@@ -1,6 +1,5 @@
-import { PlaceholderPage } from "@/components/placeholder-page";
-import { getPlaceholderPage } from "@/lib/page-content";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return <PlaceholderPage page={getPlaceholderPage("/")} />;
+  redirect("/leaderboard");
 }

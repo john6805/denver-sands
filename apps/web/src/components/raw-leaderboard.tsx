@@ -17,7 +17,7 @@ function formatValue(value: number | null) {
 export function LeaderboardTable({ rows }: { rows: RawLeaderboardRow[] }) {
   return (
     <div className="overflow-x-auto rounded-lg border">
-      <table className="w-full min-w-[980px] text-sm">
+      <table className="w-full min-w-[860px] text-sm">
         <thead className="bg-muted text-left">
           <tr>
             <th className="px-3 py-2 font-medium">Rank</th>
@@ -35,8 +35,6 @@ export function LeaderboardTable({ rows }: { rows: RawLeaderboardRow[] }) {
             <th className="px-3 py-2 text-right font-medium">Low gross</th>
             <th className="px-3 py-2 text-right font-medium">Low net</th>
             <th className="px-3 py-2 text-right font-medium">Low putts</th>
-            <th className="px-3 py-2 text-right font-medium">Beer social</th>
-            <th className="px-3 py-2 text-right font-medium">Pts + beer</th>
           </tr>
         </thead>
         <tbody>
@@ -67,8 +65,6 @@ export function LeaderboardTable({ rows }: { rows: RawLeaderboardRow[] }) {
               <td className="px-3 py-2 text-right">
                 {formatValue(row.lowestPutts)}
               </td>
-              <td className="px-3 py-2 text-right">{row.beerTotal}</td>
-              <td className="px-3 py-2 text-right">{row.pointsPlusBeer}</td>
             </tr>
           ))}
         </tbody>
@@ -151,10 +147,6 @@ export function RawLeaderboardView() {
         </div>
       </header>
 
-      <p className="text-sm text-muted-foreground">
-        Beer totals are shown as a social-only metric and do not affect raw
-        official points.
-      </p>
       <LeaderboardTable rows={rows} />
     </div>
   );
